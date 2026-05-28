@@ -19,9 +19,9 @@ export default function App() {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("theme");
       if (saved) return saved === "dark";
-      return true;
+      return false;
     }
-    return true;
+    return false;
   });
 
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
@@ -160,7 +160,7 @@ export default function App() {
           {/* Cumulative breakdown bar */}
           <div className="w-full text-center py-4 mb-4 border-t border-gray-200 dark:border-white/10 select-none">
             <span className="font-mono text-xs text-black/40 dark:text-white/30 tracking-wide">
-              Kopā: <strong className="text-black dark:text-white/80">{totalHours.toLocaleString()}</strong> stundas • <strong className="text-black dark:text-white/80">{totalMinutes.toLocaleString()}</strong> minūtes
+              Kopā: <strong className="text-black dark:text-white/80">{totalHours.toLocaleString()}</strong> H • <strong className="text-black dark:text-white/80">{totalMinutes.toLocaleString()}</strong> M
             </span>
           </div>
 
