@@ -1,0 +1,6 @@
+{
+  "name": "Dienu Skaitītājs",
+  "description": "Moderns glassmorphism dienu skaitītājs kopš 2025. gada 10. novembra ar ikdienas motivējošiem citātiem latviešu valodā un diennakts tumšo/gaišo režīmu.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
