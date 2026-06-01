@@ -137,8 +137,8 @@ export default function App() {
               </div>
             </div>
 
-            <div className="text-black/80 dark:text-white/80 text-lg font-medium tracking-widest mt-1 uppercase select-none">
-              DIENU CEĻOJUMS
+            <div className="text-red-500 dark:text-red-400 text-lg font-medium tracking-widest mt-1 uppercase select-none">
+              GI DIENU CEĻOJUMS
             </div>
           </div>
 
@@ -179,24 +179,13 @@ export default function App() {
           {/* Blog posts */}
           <div className="w-full mt-8 space-y-4">
             <div className="w-full rounded-2xl border border-gray-200 dark:border-white/10 p-5 text-left">
-              <span className="text-[10px] font-mono tracking-widest text-black/40 dark:text-white/30 uppercase">
-                01.06.2026
-              </span>
-              <h3 className="text-base font-semibold text-black dark:text-white mt-1.5 leading-snug">
-                Ritms un progress
-              </h3>
-              <p className="text-sm text-black/60 dark:text-white/50 mt-2 leading-relaxed">
-                Dienas rit, un ar katru no tām mēs kļūstam tuvāk tam, ko vēlamies sasniegt. Svarīgi ir turpināt, neatkarīgi no tā, cik lēns ir temps.
-              </p>
-            </div>
-            <div className="w-full rounded-2xl border border-gray-200 dark:border-white/10 p-5 text-left">
-              <span className="text-[10px] font-mono tracking-widest text-black/40 dark:text-white/30 uppercase">
-                25.05.2026
-              </span>
-              <h3 className="text-base font-semibold text-black dark:text-white mt-1.5 leading-snug">
+                <span className="text-[10px] tracking-widest text-black/40 dark:text-white/30 uppercase font-extralight">
+                  01.06.2026
+                </span>
+              <h3 className="text-base text-red-500 dark:text-red-400 mt-1.5 leading-snug font-extralight">
                 Pirmais solis ārpus kastes
               </h3>
-              <p className="text-sm text-black/60 dark:text-white/50 mt-2 leading-relaxed">
+              <p className="text-sm text-black dark:text-white mt-2 leading-relaxed font-extralight">
                 Šodien viss sākās. Katrs solis, lai cik mazs, ved mūs tuvāk mērķim. Šis ir pirmais ieraksts ceļojumā, kas mainīs visu.
               </p>
             </div>
