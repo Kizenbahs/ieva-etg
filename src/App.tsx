@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   Sun, 
   Moon, 
-  RefreshCw
+  RefreshCw,
+  Heart
 } from "lucide-react";
 
 const START_DATE_STR = "2025-11-10T00:00:00";
@@ -72,19 +73,8 @@ export default function App() {
 
   const diffMs = currentTime.getTime() - START_DATE.getTime();
   const totalDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
-  const totalHours = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60)));
-  const totalMinutes = Math.max(0, Math.floor(diffMs / (1000 * 60)));
-
-  const formatLatvianDate = (date: Date) => {
-    return date.toLocaleDateString("lv-LV", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
   return (
-    <div className="relative min-h-screen w-screen overflow-hidden bg-white text-black dark:bg-black dark:text-white flex flex-col items-center justify-center p-4">
+    <div className="relative min-h-screen w-screen bg-white text-black dark:bg-black dark:text-white flex flex-col items-center p-4 overflow-y-scroll">
       {/* Dark only background elements */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden hidden dark:block">
         <div className="absolute top-[-10%] left-[-10%] w-[65%] h-[60%] rounded-full bg-[#4f1a0a] filter blur-[100px] sm:blur-[130px] opacity-40 animate-float-1" />
@@ -96,7 +86,7 @@ export default function App() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full rounded-[48px] p-8 sm:p-10 relative overflow-hidden flex flex-col justify-between min-h-[660px] bg-white border border-gray-200 shadow-sm dark:bg-white/5 dark:border-white/10 dark:shadow-none"
+          className="w-full rounded-[48px] p-8 sm:p-10 relative flex flex-col bg-white border border-gray-200 shadow-sm dark:bg-white/5 dark:border-white/10 dark:shadow-none"
         >
           {/* Top card Header */}
           <div className="w-full flex justify-between items-center mb-6">
@@ -127,7 +117,7 @@ export default function App() {
           </div>
 
           {/* Core dynamic count section */}
-          <div className="flex flex-col items-center flex-1 justify-center py-4">
+          <div className="flex flex-col items-center justify-center py-4">
             <div className="text-black/40 dark:text-white/20 text-xs font-semibold uppercase tracking-[0.3em] mb-4 text-center select-none">
               10.11.2025
             </div>
@@ -142,26 +132,14 @@ export default function App() {
               >
                 {totalDays}
               </motion.div>
-              <div className="absolute -right-4 top-2 text-orange-500 font-bold text-xl select-none">+</div>
+              <div className="absolute -right-4 top-2 text-red-500 select-none">
+                <Heart className="w-5 h-5" />
+              </div>
             </div>
 
             <div className="text-black/80 dark:text-white/80 text-lg font-medium tracking-widest mt-1 uppercase select-none">
-              {totalDays === 1 
-                ? "Diena" 
-                : [2, 3, 4, 5, 6, 7, 8, 9].includes(totalDays % 10) && (totalDays % 100 < 10 || totalDays % 100 >= 20)
-                ? "Dienas" 
-                : totalDays % 10 === 1 && totalDays % 100 !== 11
-                ? "Diena"
-                : "Dienas"
-              }
+              DIENU CEĻOJUMS
             </div>
-          </div>
-
-          {/* Cumulative breakdown bar */}
-          <div className="w-full text-center py-4 mb-4 border-t border-gray-200 dark:border-white/10 select-none">
-            <span className="font-mono text-xs text-black/40 dark:text-white/30 tracking-wide">
-              Kopā: <strong className="text-black dark:text-white/80">{totalHours.toLocaleString()}</strong> H • <strong className="text-black dark:text-white/80">{totalMinutes.toLocaleString()}</strong> M
-            </span>
           </div>
 
           {/* Quote section */}
@@ -197,16 +175,34 @@ export default function App() {
               </AnimatePresence>
             </div>
           </div>
+
+          {/* Blog posts */}
+          <div className="w-full mt-8 space-y-4">
+            <div className="w-full rounded-2xl border border-gray-200 dark:border-white/10 p-5 text-left">
+              <span className="text-[10px] font-mono tracking-widest text-black/40 dark:text-white/30 uppercase">
+                01.06.2026
+              </span>
+              <h3 className="text-base font-semibold text-black dark:text-white mt-1.5 leading-snug">
+                Ritms un progress
+              </h3>
+              <p className="text-sm text-black/60 dark:text-white/50 mt-2 leading-relaxed">
+                Dienas rit, un ar katru no tām mēs kļūstam tuvāk tam, ko vēlamies sasniegt. Svarīgi ir turpināt, neatkarīgi no tā, cik lēns ir temps.
+              </p>
+            </div>
+            <div className="w-full rounded-2xl border border-gray-200 dark:border-white/10 p-5 text-left">
+              <span className="text-[10px] font-mono tracking-widest text-black/40 dark:text-white/30 uppercase">
+                25.05.2026
+              </span>
+              <h3 className="text-base font-semibold text-black dark:text-white mt-1.5 leading-snug">
+                Pirmais solis ārpus kastes
+              </h3>
+              <p className="text-sm text-black/60 dark:text-white/50 mt-2 leading-relaxed">
+                Šodien viss sākās. Katrs solis, lai cik mazs, ved mūs tuvāk mērķim. Šis ir pirmais ieraksts ceļojumā, kas mainīs visu.
+              </p>
+            </div>
+          </div>
         </motion.div>
 
-        <motion.p 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.25 }}
-          transition={{ delay: 0.8 }}
-          className="text-[9px] uppercase tracking-[0.5em] font-bold text-black/50 dark:text-white/30 mt-8 text-center select-none whitespace-nowrap"
-        >
-          Ritms & Progress • {formatLatvianDate(currentTime)}
-        </motion.p>
       </main>
     </div>
   );
