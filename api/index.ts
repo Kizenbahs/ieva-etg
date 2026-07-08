@@ -107,6 +107,210 @@ Use this seed string to maintain consistency for this date: ${todayStr}`,
   res.json(chosenFallback);
 });
 
+function isFutureEvent(dateStr: string) {
+  if (dateStr === "Nezināms") return false;
+  const parts = dateStr.split(".");
+  if (parts.length < 3) return false;
+  const eventDate = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return eventDate.getTime() > today.getTime();
+}
+
+function parseICS(icsString: string) {
+  const events: Array<{ date: string; title: string; description: string }> = [];
+  const veventBlocks = icsString.split("BEGIN:VEVENT");
+  veventBlocks.shift();
+
+  for (const block of veventBlocks) {
+    const lines = block.split(/\r?\n/);
+    let title = "";
+    let description = "";
+    let dateStr = "";
+
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i];
+
+      while (i + 1 < lines.length && (lines[i+1].startsWith(" ") || lines[i+1].startsWith("\t"))) {
+        line += lines[i+1].substring(1);
+        i++;
+      }
+
+      if (line.startsWith("SUMMARY:")) {
+        title = line.replace("SUMMARY:", "").trim();
+      } else if (line.startsWith("DESCRIPTION:")) {
+        description = line.replace("DESCRIPTION:", "")
+          .replace(/\\n/g, "\n")
+          .replace(/\\,/g, ",")
+          .replace(/\\;/g, ";")
+          .replace(/\\\\/g, "\\")
+          .trim();
+      } else if (line.startsWith("DTSTART")) {
+        const parts = line.split(":");
+        const val = parts[parts.length - 1].trim();
+        if (val.length >= 8) {
+          const year = val.substring(0, 4);
+          const month = val.substring(4, 6);
+          const day = val.substring(6, 8);
+          dateStr = `${day}.${month}.${year}`;
+          
+          if (val.includes("T")) {
+            const tIndex = val.indexOf("T");
+            const hourPart = val.substring(tIndex + 1, tIndex + 3);
+            const minPart = val.substring(tIndex + 3, tIndex + 5);
+            const isUTC = val.endsWith("Z");
+            const isoString = `${year}-${month}-${day}T${hourPart}:${minPart}:00${isUTC ? "Z" : ""}`;
+            try {
+              const dateObj = new Date(isoString);
+              const localDay = String(dateObj.getDate()).padStart(2, '0');
+              const localMonth = String(dateObj.getMonth() + 1).padStart(2, '0');
+              const localYear = dateObj.getFullYear();
+              const localHours = String(dateObj.getHours()).padStart(2, '0');
+              const localMinutes = String(dateObj.getMinutes()).padStart(2, '0');
+              dateStr = `${localDay}.${localMonth}.${localYear}.${localHours}:${localMinutes}`;
+            } catch (err) {
+              dateStr = `${day}.${month}.${year}.${hourPart}:${minPart}`;
+            }
+          }
+        }
+      }
+    }
+
+    if (title || description) {
+      events.push({
+        date: dateStr || "Nezināms",
+        title: title || "Bez virsraksta",
+        description: description || ""
+      });
+    }
+  }
+
+  events.sort((a, b) => {
+    const getParts = (d: string) => {
+      const parts = d.split(".");
+      const year = parts[2] || "1970";
+      const month = parts[1] || "01";
+      const day = parts[0] || "01";
+      const time = parts[3] || "00:00";
+      
+      const dateOnlyMs = new Date(`${year}-${month}-${day}T00:00:00`).getTime();
+      const timeParts = time.split(":");
+      const timeMs = (Number(timeParts[0]) * 60 + Number(timeParts[1])) * 60 * 1000;
+      
+      return { dateOnlyMs, timeMs };
+    };
+    
+    const aInfo = getParts(a.date);
+    const bInfo = getParts(b.date);
+    
+    if (aInfo.dateOnlyMs !== bInfo.dateOnlyMs) {
+      return aInfo.dateOnlyMs - bInfo.dateOnlyMs;
+    } else {
+      return bInfo.timeMs - aInfo.timeMs;
+    }
+  });
+
+  return events;
+}
+
+app.get("/api/calendar", async (req, res) => {
+  const calendarId = process.env.GOOGLE_CALENDAR_ID;
+  const apiKey = process.env.GOOGLE_API_KEY;
+
+  if (!calendarId) {
+    const fallback = [
+      {
+        date: "01.06.2026",
+        title: "Pirmais solis ārpus kastes",
+        description: "Šodien viss sākās. Katrs solis, lai cik mazs, ved mūs tuvāk mērķim. Šis ir pirmais ieraksts ceļojumā, kas mainīs visu."
+      }
+    ];
+    return res.json(fallback.filter(event => !isFutureEvent(event.date)));
+  }
+
+  try {
+    if (apiKey) {
+      const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?key=${apiKey}&singleEvents=true`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Google API returned status ${response.status}`);
+      }
+      const data: any = await response.json();
+      const items = data.items || [];
+      const events = items.map((item: any) => {
+        const start = item.start?.date || item.start?.dateTime || "";
+        let dateStr = "Nezināms";
+        if (start) {
+          const dateObj = new Date(start);
+          const day = String(dateObj.getDate()).padStart(2, '0');
+          const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+          const year = dateObj.getFullYear();
+          dateStr = `${day}.${month}.${year}`;
+          
+          if (item.start?.dateTime) {
+            const hours = String(dateObj.getHours()).padStart(2, '0');
+            const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+            dateStr = `${dateStr}.${hours}:${minutes}`;
+          }
+        }
+        return {
+          date: dateStr,
+          title: item.summary || "Bez virsraksta",
+          description: item.description || ""
+        };
+      });
+
+      events.sort((a: any, b: any) => {
+        const getParts = (d: string) => {
+          const parts = d.split(".");
+          const year = parts[2] || "1970";
+          const month = parts[1] || "01";
+          const day = parts[0] || "01";
+          const time = parts[3] || "00:00";
+          
+          const dateOnlyMs = new Date(`${year}-${month}-${day}T00:00:00`).getTime();
+          const timeParts = time.split(":");
+          const timeMs = (Number(timeParts[0]) * 60 + Number(timeParts[1])) * 60 * 1000;
+          
+          return { dateOnlyMs, timeMs };
+        };
+        
+        const aInfo = getParts(a.date);
+        const bInfo = getParts(b.date);
+        
+        if (aInfo.dateOnlyMs !== bInfo.dateOnlyMs) {
+          return aInfo.dateOnlyMs - bInfo.dateOnlyMs;
+        } else {
+          return bInfo.timeMs - aInfo.timeMs;
+        }
+      });
+
+      const filteredEvents = events.filter((event: any) => !isFutureEvent(event.date));
+      return res.json(filteredEvents);
+    } else {
+      const url = `https://calendar.google.com/calendar/ical/${encodeURIComponent(calendarId)}/public/basic.ics`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`iCal feed returned status ${response.status}`);
+      }
+      const icsText = await response.text();
+      const events = parseICS(icsText);
+      const filteredEvents = events.filter((event: any) => !isFutureEvent(event.date));
+      return res.json(filteredEvents);
+    }
+  } catch (error) {
+    console.error("Kļūda iegūstot kalendāra datus:", error);
+    const fallback = [
+      {
+        date: "01.06.2026",
+        title: "Pirmais solis ārpus kastes",
+        description: "Šodien viss sākās. Katrs solis, lai cik mazs, ved mūs tuvāk mērķim. Šis ir pirmais ieraksts ceļojumā, kas mainīs visu. (Kļūda ielādējot Google kalendāru)"
+      }
+    ];
+    return res.json(fallback.filter(event => !isFutureEvent(event.date)));
+  }
+});
+
 // Serve static files in production
 const distPath = path.join(process.cwd(), "dist");
 app.use(express.static(distPath));
