@@ -216,6 +216,7 @@ function parseICS(icsString: string) {
 }
 
 app.get("/api/calendar", async (req, res) => {
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   const calendarId = process.env.GOOGLE_CALENDAR_ID;
   const apiKey = process.env.GOOGLE_API_KEY;
 
