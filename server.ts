@@ -236,7 +236,7 @@ app.get("/api/calendar", async (req, res) => {
 
   try {
     if (apiKey) {
-      const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?key=${apiKey}&singleEvents=true&supportsAttachments=true`;
+      const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?key=${apiKey}&singleEvents=true&supportsAttachments=true&t=${Date.now()}`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Google API returned status ${response.status}`);
@@ -311,7 +311,7 @@ app.get("/api/calendar", async (req, res) => {
       const filteredEvents = events.filter((event: any) => !isFutureEvent(event.date));
       return res.json(filteredEvents);
     } else {
-      const url = `https://calendar.google.com/calendar/ical/${encodeURIComponent(calendarId)}/public/basic.ics`;
+      const url = `https://calendar.google.com/calendar/ical/${encodeURIComponent(calendarId)}/public/basic.ics?t=${Date.now()}`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`iCal feed returned status ${response.status}`);
