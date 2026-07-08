@@ -242,8 +242,9 @@ export default function App() {
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
+          whileHover={{ y: -8, scale: 1.01 }}
           transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full lg:w-[390px] shrink-0 lg:sticky lg:top-12 rounded-[48px] p-8 sm:p-10 relative flex flex-col justify-between bg-white border border-gray-200 shadow-sm dark:bg-white/5 dark:border-white/10 dark:shadow-none min-h-[460px]"
+          className="w-full lg:w-[390px] shrink-0 lg:sticky lg:top-12 rounded-[48px] p-8 sm:p-10 relative flex flex-col justify-between bg-white border border-gray-200 shadow-sm dark:bg-white/5 dark:border-white/10 dark:shadow-none min-h-[460px] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-2xl hover:border-orange-500/20 dark:hover:border-orange-500/20 dark:hover:bg-white/[0.07]"
         >
           {/* Top card Header */}
           <div className="w-full flex justify-between items-center mb-3">
@@ -326,9 +327,10 @@ export default function App() {
                 key={index}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
+                whileHover={{ y: -8, scale: 1.01 }}
                 viewport={{ once: true, amount: 0.15 }}
                 transition={{ duration: 0.9, delay: 0.1 + index * 0.05, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full rounded-[48px] p-8 sm:p-10 relative flex flex-col justify-between bg-white border border-gray-200 shadow-sm dark:bg-white/5 dark:border-white/10 dark:shadow-none min-h-[460px]"
+                className="w-full rounded-[48px] p-8 sm:p-10 relative flex flex-col justify-between bg-white border border-gray-200 shadow-sm dark:bg-white/5 dark:border-white/10 dark:shadow-none min-h-[460px] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-2xl hover:border-orange-500/20 dark:hover:border-orange-500/20 dark:hover:bg-white/[0.07]"
               >
                 {/* Top card Header */}
                 <div className="w-full flex justify-between items-center mb-3">
