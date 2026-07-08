@@ -206,7 +206,7 @@ function parseICS(icsString: string) {
     const bInfo = getParts(b.date);
     
     if (aInfo.dateOnlyMs !== bInfo.dateOnlyMs) {
-      return aInfo.dateOnlyMs - bInfo.dateOnlyMs;
+      return bInfo.dateOnlyMs - aInfo.dateOnlyMs;
     } else {
       return bInfo.timeMs - aInfo.timeMs;
     }
@@ -232,7 +232,7 @@ app.get("/api/calendar", async (req, res) => {
 
   try {
     if (apiKey) {
-      const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?key=${apiKey}&singleEvents=true`;
+      const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?key=${apiKey}&singleEvents=true&supportsAttachments=true`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Google API returned status ${response.status}`);
@@ -255,10 +255,27 @@ app.get("/api/calendar", async (req, res) => {
             dateStr = `${dateStr}.${hours}:${minutes}`;
           }
         }
+        
+        let imageUrl = "";
+        if (item.attachments && item.attachments.length > 0) {
+          const imgAttachment = item.attachments.find((att: any) => 
+            att.mimeType?.startsWith("image/") || 
+            att.title?.toLowerCase().endsWith(".jpg") ||
+            att.title?.toLowerCase().endsWith(".jpeg") ||
+            att.title?.toLowerCase().endsWith(".png") ||
+            att.title?.toLowerCase().endsWith(".webp") ||
+            att.title?.toLowerCase().endsWith(".gif")
+          );
+          if (imgAttachment) {
+            imageUrl = imgAttachment.fileUrl || "";
+          }
+        }
+
         return {
           date: dateStr,
           title: item.summary || "Bez virsraksta",
-          description: item.description || ""
+          description: item.description || "",
+          imageUrl: imageUrl
         };
       });
 
@@ -281,7 +298,7 @@ app.get("/api/calendar", async (req, res) => {
         const bInfo = getParts(b.date);
         
         if (aInfo.dateOnlyMs !== bInfo.dateOnlyMs) {
-          return aInfo.dateOnlyMs - bInfo.dateOnlyMs;
+          return bInfo.dateOnlyMs - aInfo.dateOnlyMs;
         } else {
           return bInfo.timeMs - aInfo.timeMs;
         }

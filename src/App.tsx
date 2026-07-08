@@ -15,7 +15,33 @@ interface CalendarEventType {
   date: string;
   title: string;
   description: string;
+  imageUrl?: string;
 }
+
+const isImageURL = (url: string): boolean => {
+  const cleanUrl = url.toLowerCase().split('?')[0];
+  const isDirectImage = cleanUrl.endsWith('.jpg') || 
+                        cleanUrl.endsWith('.jpeg') || 
+                        cleanUrl.endsWith('.png') || 
+                        cleanUrl.endsWith('.webp') || 
+                        cleanUrl.endsWith('.gif') || 
+                        cleanUrl.endsWith('.svg');
+                        
+  const isGoogleDrive = url.includes('drive.google.com/file/d/');
+  
+  return isDirectImage || isGoogleDrive;
+};
+
+const getDirectImageURL = (url: string): string => {
+  if (url.includes('drive.google.com/file/d/')) {
+    const match = url.match(/\/file\/d\/([^\/]+)/);
+    if (match && match[1]) {
+      const fileId = match[1].split('?')[0].split('/')[0];
+      return `https://lh3.googleusercontent.com/d/${fileId}`;
+    }
+  }
+  return url;
+};
 
 const renderFormattedText = (text: string) => {
   if (!text) return null;
@@ -34,6 +60,16 @@ const renderFormattedText = (text: string) => {
       return subParts.map((subPart, i) => {
         if (subPart.match(urlRegex)) {
           const url = subPart.startsWith('http') ? subPart : `https://${subPart}`;
+          if (isImageURL(url)) {
+            return (
+              <img
+                key={i}
+                src={getDirectImageURL(url)}
+                alt="Ieraksta attēls"
+                className="my-3 rounded-2xl max-w-full max-h-[220px] object-cover mx-auto shadow-sm block"
+              />
+            );
+          }
           return (
             <a
               key={i}
@@ -78,6 +114,16 @@ const renderFormattedText = (text: string) => {
             return <br key={key} />;
           case 'a': {
             const href = element.getAttribute('href') || '#';
+            if (isImageURL(href)) {
+              return (
+                <img
+                  key={key}
+                  src={getDirectImageURL(href)}
+                  alt="Ieraksta attēls"
+                  className="my-3 rounded-2xl max-w-full max-h-[220px] object-cover mx-auto shadow-sm block"
+                />
+              );
+            }
             return (
               <a
                 key={key}
@@ -293,6 +339,13 @@ export default function App() {
                       {event.title}
                     </h2>
                   </div>
+                  {event.imageUrl && (
+                    <img 
+                      src={getDirectImageURL(event.imageUrl)} 
+                      alt={event.title} 
+                      className="my-3 rounded-2xl max-w-full max-h-[220px] object-cover mx-auto shadow-sm block"
+                    />
+                  )}
                 </div>
 
                 {/* Excerpt section */}
