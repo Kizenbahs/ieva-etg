@@ -27,7 +27,8 @@ const isImageURL = (url: string): boolean => {
                         cleanUrl.endsWith('.gif') || 
                         cleanUrl.endsWith('.svg');
                         
-  const isGoogleDrive = url.includes('drive.google.com/file/d/');
+  const isGoogleDrive = url.includes('drive.google.com/file/d/') || 
+                        url.includes('drive.google.com/open?id=');
   
   return isDirectImage || isGoogleDrive;
 };
@@ -35,6 +36,13 @@ const isImageURL = (url: string): boolean => {
 const getDirectImageURL = (url: string): string => {
   if (url.includes('drive.google.com/file/d/')) {
     const match = url.match(/\/file\/d\/([^\/]+)/);
+    if (match && match[1]) {
+      const fileId = match[1].split('?')[0].split('/')[0];
+      return `https://lh3.googleusercontent.com/d/${fileId}`;
+    }
+  }
+  if (url.includes('drive.google.com/open?id=')) {
+    const match = url.match(/[\?&]id=([^&]+)/);
     if (match && match[1]) {
       const fileId = match[1].split('?')[0].split('/')[0];
       return `https://lh3.googleusercontent.com/d/${fileId}`;
