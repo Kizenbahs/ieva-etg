@@ -280,7 +280,7 @@ export default function App() {
                   <span className="text-black/50 dark:text-white/40 text-[10px] sm:text-[11px] tracking-[0.15em] font-bold uppercase select-none">
                     {event.date}
                   </span>
-                  <div className="flex items-center gap-1.5 text-black/50 dark:text-white/40 select-none">
+                  <div className="flex items-center gap-1.5 text-red-500 select-none">
                     <BookOpen className="w-3.5 h-3.5" />
                   </div>
                 </div>
@@ -288,7 +288,7 @@ export default function App() {
                 {/* Core blog post section */}
                 <div className="flex flex-col items-center justify-center py-4 flex-grow">
                   <div className="relative my-4 text-center px-2 min-h-[140px] flex items-center justify-center">
-                    <h2 className="text-2xl sm:text-3xl font-light text-black dark:text-white leading-tight tracking-tight font-serif italic select-none">
+                    <h2 className="text-2xl sm:text-3xl font-light text-red-500 leading-tight tracking-tight font-serif italic select-none">
                       {event.title}
                     </h2>
                   </div>
