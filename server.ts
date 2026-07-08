@@ -219,6 +219,9 @@ app.get("/api/calendar", async (req, res) => {
   const calendarId = process.env.GOOGLE_CALENDAR_ID;
   const apiKey = process.env.GOOGLE_API_KEY;
 
+  console.log("[API] GOOGLE_CALENDAR_ID exists:", !!calendarId);
+  console.log("[API] GOOGLE_API_KEY exists:", !!apiKey);
+
   if (!calendarId) {
     const fallback = [
       {
