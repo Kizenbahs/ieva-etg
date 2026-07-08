@@ -1,19 +1,110 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Sun, 
   Moon, 
   RefreshCw,
-  Heart
+  Heart,
+  BookOpen
 } from "lucide-react";
 
 const START_DATE_STR = "2025-11-10T00:00:00";
 const START_DATE = new Date(START_DATE_STR);
 
-interface QuoteType {
-  quote: string;
-  author: string;
+interface CalendarEventType {
+  date: string;
+  title: string;
+  description: string;
 }
+
+const renderFormattedText = (text: string) => {
+  if (!text) return null;
+
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(`<div>${text}</div>`, 'text/html');
+    const root = doc.body.firstChild;
+    if (!root) return null;
+
+    const linkify = (plainText: string): ReactNode => {
+      const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi;
+      const subParts = plainText.split(urlRegex);
+      if (subParts.length === 1) return plainText;
+
+      return subParts.map((subPart, i) => {
+        if (subPart.match(urlRegex)) {
+          const url = subPart.startsWith('http') ? subPart : `https://${subPart}`;
+          return (
+            <a
+              key={i}
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-orange-500 dark:text-orange-400 hover:underline break-all"
+            >
+              {subPart}
+            </a>
+          );
+        }
+        return subPart;
+      });
+    };
+
+    const convertNode = (node: ChildNode, key: string): ReactNode => {
+      if (node.nodeType === 3) { // Text node
+        return linkify(node.textContent || '');
+      }
+
+      if (node.nodeType === 1) { // Element node
+        const element = node as Element;
+        const tagName = element.tagName.toLowerCase();
+        const childNodes = Array.from(element.childNodes);
+        const children = childNodes.map((child, i) => convertNode(child, `${key}-${i}`));
+
+        switch (tagName) {
+          case 'div':
+            return <div key={key}>{children}</div>;
+          case 'p':
+            return <p key={key}>{children}</p>;
+          case 'b':
+          case 'strong':
+            return <strong key={key} className="font-bold">{children}</strong>;
+          case 'i':
+          case 'em':
+            return <em key={key} className="italic">{children}</em>;
+          case 'u':
+            return <u key={key} className="underline">{children}</u>;
+          case 'br':
+            return <br key={key} />;
+          case 'a': {
+            const href = element.getAttribute('href') || '#';
+            return (
+              <a
+                key={key}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-orange-500 dark:text-orange-400 hover:underline break-all"
+              >
+                {children}
+              </a>
+            );
+          }
+          default:
+            return <span key={key}>{children}</span>;
+        }
+      }
+
+      return null;
+    };
+
+    const children = Array.from(root.childNodes).map((child, i) => convertNode(child, `root-${i}`));
+    return <>{children}</>;
+  } catch (error) {
+    console.error('Failed to parse HTML:', error);
+    return text;
+  }
+};
 
 export default function App() {
   const [darkMode, setDarkMode] = useState<boolean>(() => {
@@ -27,11 +118,38 @@ export default function App() {
 
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   
-  const [quote, setQuote] = useState<QuoteType>({
-    quote: "Katrs solis, ziņā lai cik mazs, ved tevi tuvāk mērķim.",
-    author: "Latviešu gudrība"
-  });
-  const [loadingQuote, setLoadingQuote] = useState<boolean>(true);
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEventType[]>([]);
+  const [loadingCalendar, setLoadingCalendar] = useState<boolean>(true);
+
+  const fetchCalendar = async () => {
+    setLoadingCalendar(true);
+    const fallbackEvents: CalendarEventType[] = [
+      {
+        date: "01.06.2026",
+        title: "Pirmais solis ārpus kastes",
+        description: "Šodien viss sākās. Katrs solis, lai cik mazs, ved mūs tuvāk mērķim. Šis ir pirmais ieraksts ceļojumā, kas mainīs visu."
+      }
+    ];
+    try {
+      const res = await fetch("/api/calendar");
+      if (res.ok) {
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const data = await res.json();
+          setCalendarEvents(data.length > 0 ? data : fallbackEvents);
+        } else {
+          setCalendarEvents(fallbackEvents);
+        }
+      } else {
+        setCalendarEvents(fallbackEvents);
+      }
+    } catch (err) {
+      console.error("Kļūda ielādējot kalendāru, tiek izmantoti rezerves dati:", err);
+      setCalendarEvents(fallbackEvents);
+    } finally {
+      setLoadingCalendar(false);
+    }
+  };
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -51,42 +169,27 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  const fetchQuote = async (bypassCache: boolean = false) => {
-    setLoadingQuote(true);
-    try {
-      const seed = bypassCache ? `refresh_${Date.now()}` : new Date().toISOString().split("T")[0];
-      const res = await fetch(`/api/quote?date=${encodeURIComponent(seed)}`);
-      if (res.ok) {
-        const data = await res.json();
-        setQuote(data);
-      }
-    } catch (err) {
-      console.error("Kļūda ielādējot citātu:", err);
-    } finally {
-      setLoadingQuote(false);
-    }
-  };
-
   useEffect(() => {
-    fetchQuote(false);
+    fetchCalendar();
   }, []);
 
   const diffMs = currentTime.getTime() - START_DATE.getTime();
   const totalDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
   return (
-    <div className="relative min-h-screen w-screen bg-white text-black dark:bg-black dark:text-white flex flex-col items-center p-4 overflow-y-scroll">
+    <div className="relative min-h-screen w-screen bg-white text-black dark:bg-black dark:text-white flex flex-col items-center justify-center py-12 px-4">
       {/* Dark only background elements */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden hidden dark:block">
         <div className="absolute top-[-10%] left-[-10%] w-[65%] h-[60%] rounded-full bg-[#4f1a0a] filter blur-[100px] sm:blur-[130px] opacity-40 animate-float-1" />
         <div className="absolute bottom-[-15%] right-[-10%] w-[75%] h-[70%] rounded-full bg-[#1a2c3a] filter blur-[100px] sm:blur-[130px] opacity-30 animate-float-2" />
       </div>
 
-      <main className="w-full max-w-[390px] z-10 flex flex-col items-center">
+      <main className="w-full max-w-[390px] lg:max-w-[1200px] z-10 flex flex-col lg:flex-row items-start justify-center gap-6">
+        {/* Counter Card */}
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full rounded-[48px] p-8 sm:p-10 relative flex flex-col bg-white border border-gray-200 shadow-sm dark:bg-white/5 dark:border-white/10 dark:shadow-none"
+          className="w-full lg:w-[390px] shrink-0 lg:sticky lg:top-12 rounded-[48px] p-8 sm:p-10 relative flex flex-col justify-between bg-white border border-gray-200 shadow-sm dark:bg-white/5 dark:border-white/10 dark:shadow-none min-h-[460px]"
         >
           {/* Top card Header */}
           <div className="w-full flex justify-between items-center mb-6">
@@ -117,12 +220,12 @@ export default function App() {
           </div>
 
           {/* Core dynamic count section */}
-          <div className="flex flex-col items-center justify-center py-4">
+          <div className="flex flex-col items-center justify-center py-4 flex-grow">
             <div className="text-black/40 dark:text-white/20 text-xs font-semibold uppercase tracking-[0.3em] mb-4 text-center select-none">
               10.11.2025
             </div>
 
-            <div className="relative my-2 select-none">
+            <div className="relative my-4 text-center px-2 min-h-[140px] flex items-center justify-center select-none">
               <motion.div 
                 key={totalDays}
                 initial={{ scale: 0.95, opacity: 0 }}
@@ -136,62 +239,77 @@ export default function App() {
                 <Heart className="w-5 h-5" />
               </div>
             </div>
-
-            <div className="text-red-500 dark:text-red-400 text-lg font-medium tracking-widest mt-1 uppercase select-none">
-              GI DIENU CEĻOJUMS
-            </div>
           </div>
 
           {/* Quote section */}
-          <div className="w-full pb-2 text-center flex flex-col items-center relative gap-1">
+          <div className="w-full pb-2 text-center flex flex-col items-center relative gap-1 mt-auto">
             <div className="w-8 h-[1px] bg-orange-500/50 mx-auto mb-6" />
 
             <div className="w-full min-h-[100px] flex items-center justify-center">
-              <AnimatePresence mode="wait">
-                {loadingQuote ? (
-                  <div className="flex flex-col items-center justify-center gap-1.5 py-4">
-                    <RefreshCw className="w-4 h-4 text-orange-500 animate-spin" />
-                    <span className="text-[10px] font-mono tracking-widest text-black/40 dark:text-white/20 uppercase select-none">
-                      Meklē iedvesmas avotu...
-                    </span>
-                  </div>
-                ) : (
-                  <motion.div
-                    key={quote.quote}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.4 }}
-                    className="w-full"
-                  >
-                    <p className="text-black dark:text-[#e0d8d0] italic text-lg sm:text-xl font-serif leading-relaxed px-4">
-                      “{quote.quote}”
-                    </p>
-                    <p className="mt-3 text-black/50 dark:text-white/30 text-[9px] uppercase tracking-widest leading-none">
-                      — {quote.author || "Nezināms"}
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
-
-          {/* Blog posts */}
-          <div className="w-full mt-8 space-y-4">
-            <div className="w-full rounded-2xl border border-gray-200 dark:border-white/10 p-5 text-left">
-                <span className="text-[10px] tracking-widest text-black/40 dark:text-white/30 uppercase font-extralight">
-                  01.06.2026
-                </span>
-              <h3 className="text-base text-red-500 dark:text-red-400 mt-1.5 leading-snug font-extralight">
-                Pirmais solis ārpus kastes
-              </h3>
-              <p className="text-sm text-black dark:text-white mt-2 leading-relaxed font-extralight">
-                Šodien viss sākās. Katrs solis, lai cik mazs, ved mūs tuvāk mērķim. Šis ir pirmais ieraksts ceļojumā, kas mainīs visu.
+              <p className="text-black dark:text-[#e0d8d0] italic text-lg sm:text-xl font-serif leading-relaxed px-4 select-none">
+                “GI dienu ceļojums”
               </p>
             </div>
           </div>
         </motion.div>
 
+        {/* Calendar Event Cards */}
+        <div className={`w-full lg:max-w-[800px] flex flex-col ${calendarEvents.length > 1 ? 'md:grid md:grid-cols-2' : ''} gap-6`}>
+          {loadingCalendar ? (
+            <div className="w-full flex items-center justify-center p-12 text-black/40 dark:text-white/30 text-xs font-mono uppercase tracking-widest rounded-[48px] bg-white border border-gray-200 shadow-sm dark:bg-white/5 dark:border-white/10 min-h-[460px]">
+              <div className="flex flex-col items-center gap-2">
+                <RefreshCw className="w-5 h-5 animate-spin text-orange-500" />
+                <span>Meklē ierakstus...</span>
+              </div>
+            </div>
+          ) : calendarEvents.length === 0 ? (
+            <div className="w-full flex items-center justify-center p-12 text-black/40 dark:text-white/30 text-xs font-mono uppercase tracking-widest rounded-[48px] bg-white border border-gray-200 shadow-sm dark:bg-white/5 dark:border-white/10 min-h-[460px]">
+              Nav atrasti ieraksti
+            </div>
+          ) : (
+            calendarEvents.map((event, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.9, delay: 0.15 + index * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                className="w-full rounded-[48px] p-8 sm:p-10 relative flex flex-col justify-between bg-white border border-gray-200 shadow-sm dark:bg-white/5 dark:border-white/10 dark:shadow-none min-h-[460px]"
+              >
+                {/* Top card Header */}
+                <div className="w-full flex justify-between items-center mb-6">
+                  <span className="text-black/50 dark:text-white/40 text-[10px] sm:text-[11px] tracking-[0.15em] font-bold uppercase select-none">
+                    {event.date}
+                  </span>
+                  <div className="flex items-center gap-1.5 text-black/50 dark:text-white/40 select-none">
+                    <BookOpen className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+
+                {/* Core blog post section */}
+                <div className="flex flex-col items-center justify-center py-4 flex-grow">
+                  <div className="relative my-4 text-center px-2 min-h-[140px] flex items-center justify-center">
+                    <h2 className="text-2xl sm:text-3xl font-light text-black dark:text-white leading-tight tracking-tight font-serif italic select-none">
+                      {event.title}
+                    </h2>
+                  </div>
+                </div>
+
+                {/* Excerpt section */}
+                {event.description && (
+                  <div className="w-full pb-2 text-center flex flex-col items-center relative gap-1 mt-auto">
+                    <div className="w-8 h-[1px] bg-orange-500/50 mx-auto mb-6" />
+
+                    <div className="w-full min-h-[100px] flex items-center justify-center">
+                      <p className="text-black dark:text-[#e0d8d0] italic text-lg sm:text-xl font-serif leading-relaxed px-4 whitespace-pre-wrap">
+                        “{renderFormattedText(event.description)}”
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            ))
+          )}
+        </div>
       </main>
     </div>
   );
