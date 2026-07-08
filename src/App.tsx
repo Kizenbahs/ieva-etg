@@ -74,7 +74,7 @@ const renderFormattedText = (text: string) => {
                 key={i}
                 src={getDirectImageURL(url)}
                 alt="Ieraksta attēls"
-                className="my-4 rounded-3xl w-full max-h-[320px] sm:max-h-[420px] object-cover mx-auto shadow-md block"
+                className="my-4 rounded-3xl w-full max-h-[320px] sm:max-h-[420px] object-cover mx-auto shadow-md block grayscale transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:grayscale-0 hover:grayscale-0"
               />
             );
           }
@@ -128,7 +128,7 @@ const renderFormattedText = (text: string) => {
                   key={key}
                   src={getDirectImageURL(href)}
                   alt="Ieraksta attēls"
-                  className="my-4 rounded-3xl w-full max-h-[320px] sm:max-h-[420px] object-cover mx-auto shadow-md block"
+                  className="my-4 rounded-3xl w-full max-h-[320px] sm:max-h-[420px] object-cover mx-auto shadow-md block grayscale transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:grayscale-0 hover:grayscale-0"
                 />
               );
             }
@@ -230,7 +230,7 @@ export default function App() {
   const diffMs = currentTime.getTime() - START_DATE.getTime();
   const totalDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
   return (
-    <div className="relative min-h-screen w-screen bg-white text-black dark:bg-black dark:text-white flex flex-col items-center justify-center py-12 px-4">
+    <div className="relative min-h-screen w-screen bg-gray-50 text-black dark:bg-black dark:text-white flex flex-col items-center justify-center py-12 px-4">
       {/* Dark only background elements */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden hidden dark:block">
         <div className="absolute top-[-10%] left-[-10%] w-[65%] h-[60%] rounded-full bg-[#4f1a0a] filter blur-[100px] sm:blur-[130px] opacity-40 animate-float-1" />
@@ -248,8 +248,8 @@ export default function App() {
         >
           {/* Top card Header */}
           <div className="w-full flex justify-between items-center mb-3">
-            <span className="text-black/50 dark:text-white/40 text-[10px] sm:text-[11px] tracking-[0.15em] font-bold uppercase select-none">
-              OUT OFF BOX {currentTime.getDate()}.{currentTime.getMonth() + 1}.{String(currentTime.getFullYear()).slice(-2)}
+            <span className="text-black dark:text-white text-lg sm:text-xl italic font-serif select-none">
+              {String(currentTime.getDate()).padStart(2, '0')}.{String(currentTime.getMonth() + 1).padStart(2, '0')}.{currentTime.getFullYear()}
             </span>
             
             <div className="flex items-center gap-3">
@@ -276,10 +276,6 @@ export default function App() {
 
           {/* Core dynamic count section */}
           <div className="flex flex-col items-center justify-center pt-0 pb-4 flex-grow">
-            <div className="text-black/40 dark:text-white/20 text-xs font-semibold uppercase tracking-[0.3em] mb-4 text-center select-none">
-              10.11.2025
-            </div>
-
             <div className="relative mt-0 mb-0 text-center px-2 min-h-[140px] flex items-center justify-center select-none">
               <motion.div 
                 key={totalDays}
@@ -302,7 +298,7 @@ export default function App() {
 
             <div className="w-full min-h-[100px] flex items-center justify-center">
               <p className="text-black dark:text-[#e0d8d0] italic text-lg sm:text-xl font-serif leading-relaxed px-4 select-none">
-                “GI dienu ceļojums”
+                “GI dienu ceļojums no 10.11.2025”
               </p>
             </div>
           </div>
@@ -330,15 +326,15 @@ export default function App() {
                 whileHover={{ y: -8, scale: 1.01 }}
                 viewport={{ once: true, amount: 0.15 }}
                 transition={{ duration: 0.9, delay: 0.1 + index * 0.05, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full rounded-[48px] p-8 sm:p-10 relative flex flex-col justify-between bg-white border border-gray-200 shadow-sm dark:bg-white/5 dark:border-white/10 dark:shadow-none min-h-[460px] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-2xl hover:border-orange-500/20 dark:hover:border-orange-500/20 dark:hover:bg-white/[0.07]"
+                className="group w-full rounded-[48px] p-8 sm:p-10 relative flex flex-col justify-between bg-white border border-gray-200 shadow-sm dark:bg-white/5 dark:border-white/10 dark:shadow-none min-h-[460px] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-2xl hover:border-orange-500/20 dark:hover:border-orange-500/20 dark:hover:bg-white/[0.07]"
               >
                 {/* Top card Header */}
                 <div className="w-full flex justify-between items-center mb-3">
-                  <span className="text-black/50 dark:text-white/40 text-[10px] sm:text-[11px] tracking-[0.15em] font-bold uppercase select-none">
+                  <span className="text-black dark:text-white text-lg sm:text-xl italic font-serif select-none">
                     {event.date}
                   </span>
                   <div className="flex items-center gap-1.5 text-red-500 select-none">
-                    <BookOpen className="w-3.5 h-3.5" />
+                    <BookOpen className="w-4.5 h-4.5" />
                   </div>
                 </div>
 
@@ -353,7 +349,7 @@ export default function App() {
                     <img 
                       src={getDirectImageURL(event.imageUrl)} 
                       alt={event.title} 
-                      className="mt-1 mb-4 rounded-3xl w-full max-h-[320px] sm:max-h-[420px] object-cover mx-auto shadow-md block"
+                      className="mt-1 mb-4 rounded-3xl w-full max-h-[320px] sm:max-h-[420px] object-cover mx-auto shadow-md block grayscale transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:grayscale-0 hover:grayscale-0"
                     />
                   )}
                 </div>
