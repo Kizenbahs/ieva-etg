@@ -66,7 +66,7 @@ const renderFormattedText = (text: string) => {
                 key={i}
                 src={getDirectImageURL(url)}
                 alt="Ieraksta attēls"
-                className="my-3 rounded-2xl max-w-full max-h-[220px] object-cover mx-auto shadow-sm block"
+                className="my-4 rounded-3xl w-full max-h-[320px] sm:max-h-[420px] object-cover mx-auto shadow-md block"
               />
             );
           }
@@ -120,7 +120,7 @@ const renderFormattedText = (text: string) => {
                   key={key}
                   src={getDirectImageURL(href)}
                   alt="Ieraksta attēls"
-                  className="my-3 rounded-2xl max-w-full max-h-[220px] object-cover mx-auto shadow-sm block"
+                  className="my-4 rounded-3xl w-full max-h-[320px] sm:max-h-[420px] object-cover mx-auto shadow-md block"
                 />
               );
             }
@@ -238,7 +238,7 @@ export default function App() {
           className="w-full lg:w-[390px] shrink-0 lg:sticky lg:top-12 rounded-[48px] p-8 sm:p-10 relative flex flex-col justify-between bg-white border border-gray-200 shadow-sm dark:bg-white/5 dark:border-white/10 dark:shadow-none min-h-[460px]"
         >
           {/* Top card Header */}
-          <div className="w-full flex justify-between items-center mb-6">
+          <div className="w-full flex justify-between items-center mb-3">
             <span className="text-black/50 dark:text-white/40 text-[10px] sm:text-[11px] tracking-[0.15em] font-bold uppercase select-none">
               OUT OFF BOX {currentTime.getDate()}.{currentTime.getMonth() + 1}.{String(currentTime.getFullYear()).slice(-2)}
             </span>
@@ -266,12 +266,12 @@ export default function App() {
           </div>
 
           {/* Core dynamic count section */}
-          <div className="flex flex-col items-center justify-center py-4 flex-grow">
+          <div className="flex flex-col items-center justify-center pt-0 pb-4 flex-grow">
             <div className="text-black/40 dark:text-white/20 text-xs font-semibold uppercase tracking-[0.3em] mb-4 text-center select-none">
               10.11.2025
             </div>
 
-            <div className="relative my-4 text-center px-2 min-h-[140px] flex items-center justify-center select-none">
+            <div className="relative mt-0 mb-0 text-center px-2 min-h-[140px] flex items-center justify-center select-none">
               <motion.div 
                 key={totalDays}
                 initial={{ scale: 0.95, opacity: 0 }}
@@ -323,7 +323,7 @@ export default function App() {
                 className="w-full rounded-[48px] p-8 sm:p-10 relative flex flex-col justify-between bg-white border border-gray-200 shadow-sm dark:bg-white/5 dark:border-white/10 dark:shadow-none min-h-[460px]"
               >
                 {/* Top card Header */}
-                <div className="w-full flex justify-between items-center mb-6">
+                <div className="w-full flex justify-between items-center mb-3">
                   <span className="text-black/50 dark:text-white/40 text-[10px] sm:text-[11px] tracking-[0.15em] font-bold uppercase select-none">
                     {event.date}
                   </span>
@@ -333,8 +333,8 @@ export default function App() {
                 </div>
 
                 {/* Core blog post section */}
-                <div className="flex flex-col items-center justify-center py-4 flex-grow">
-                  <div className="relative my-4 text-center px-2 min-h-[140px] flex items-center justify-center">
+                <div className="flex flex-col items-center justify-center pt-0 pb-4 flex-grow">
+                  <div className="relative mt-0 mb-0 text-center px-2 min-h-[140px] flex items-center justify-center">
                     <h2 className="text-2xl sm:text-3xl font-light text-red-500 leading-tight tracking-tight font-serif italic select-none">
                       {event.title}
                     </h2>
@@ -343,7 +343,7 @@ export default function App() {
                     <img 
                       src={getDirectImageURL(event.imageUrl)} 
                       alt={event.title} 
-                      className="my-3 rounded-2xl max-w-full max-h-[220px] object-cover mx-auto shadow-sm block"
+                      className="mt-1 mb-4 rounded-3xl w-full max-h-[320px] sm:max-h-[420px] object-cover mx-auto shadow-md block"
                     />
                   )}
                 </div>
