@@ -297,7 +297,7 @@ export default function App() {
             <div className="w-8 h-[1px] bg-orange-500/50 mx-auto mb-6" />
 
             <div className="w-full min-h-[100px] flex items-center justify-center">
-              <p className="text-black dark:text-[#e0d8d0] italic text-lg sm:text-xl font-serif leading-relaxed px-4 select-none">
+              <p className="text-black dark:text-[#e0d8d0] italic text-xl sm:text-2xl font-serif leading-relaxed px-4 select-none">
                 “GI dienu ceļojums no 10.11.2025”
               </p>
             </div>
@@ -341,7 +341,7 @@ export default function App() {
                 {/* Core blog post section */}
                 <div className="flex flex-col items-center justify-center pt-0 pb-4 flex-grow">
                   <div className="relative mt-0 mb-0 text-center px-2 min-h-[140px] flex items-center justify-center">
-                    <h2 className="text-2xl sm:text-3xl font-light text-red-500 leading-tight tracking-tight font-serif italic select-none">
+                    <h2 className="text-3xl sm:text-4xl font-light text-red-500 leading-tight tracking-tight font-serif italic select-none">
                       {event.title}
                     </h2>
                   </div>
@@ -360,7 +360,7 @@ export default function App() {
                     <div className="w-8 h-[1px] bg-orange-500/50 mx-auto mb-6" />
 
                     <div className="w-full min-h-[100px] flex items-center justify-center">
-                      <p className="text-black dark:text-[#e0d8d0] italic text-lg sm:text-xl font-serif leading-relaxed px-4 whitespace-pre-wrap">
+                      <p className="text-black dark:text-[#e0d8d0] italic text-[23.4px] sm:text-[26px] font-serif leading-relaxed px-4 whitespace-pre-wrap">
                         “{renderFormattedText(event.description)}”
                       </p>
                     </div>
