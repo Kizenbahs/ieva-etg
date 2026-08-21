@@ -1,12 +1,16 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300;1,400;1,500;1,600&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,600;1,900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --font-sans: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Cormorant Garamond", ui-serif, Georgia, serif;
+  --font-serif: "Playfair Display", "Cormorant Garamond", ui-serif, Georgia, serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+:root {
+  color-scheme: light dark;
 }
 
 body {
@@ -15,9 +19,52 @@ body {
   overflow-x: hidden;
   margin: 0;
   padding: 0;
+  background-color: #F4F0E6;
+  color: #1C1917;
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
 
-/* Dark only background animations */
+.dark body,
+html.dark body {
+  background-color: #0E120F;
+  color: #F3F4F6;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 4px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #2D3732;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #558B2F;
+}
+
+/* Editorial Drop Cap */
+.drop-cap::first-letter {
+  font-family: var(--font-serif);
+  font-size: 3.8rem;
+  line-height: 0.85;
+  float: left;
+  margin-top: 0.15rem;
+  margin-right: 0.6rem;
+  font-weight: 700;
+  color: #4A8535;
+}
+
+.dark .drop-cap::first-letter {
+  color: #88D462;
+}
+
+/* Background floating glow animations */
 @keyframes float {
   0% { transform: translate(0px, 0px) scale(1); }
   33% { transform: translate(40px, -60px) scale(1.1); }
@@ -38,4 +85,4 @@ body {
 
 .animate-float-2 {
   animation: float-reverse 32s infinite ease-in-out;
-}
+}
