@@ -285,45 +285,45 @@ export default function App() {
         <header className="w-full pt-8 pb-6 border-b border-[#E2DDD0] dark:border-stone-800 flex flex-col gap-6">
 
           {/* Main Magazine Header Masthead */}
-          <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-6 py-4">
-            <div>
-              <motion.h1 
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 py-6">
+            <div className="flex-1 flex flex-col gap-2">
+              <motion.div 
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
-                className="font-serif text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight leading-none text-stone-900 dark:text-stone-50"
+                className="flex flex-col"
               >
-                GI <span className="italic font-normal text-[#467C32] dark:text-[#88D462]">Journal</span>
-              </motion.h1>
-              <p className="mt-3 text-stone-600 dark:text-stone-400 font-serif italic text-lg sm:text-xl max-w-xl">
-                Ieraksti, notikumi un pārdomas ceļojumā
-              </p>
+                <h1 className="font-serif text-6xl sm:text-7xl lg:text-8xl font-black tracking-tight leading-none text-stone-900 dark:text-stone-50 flex items-baseline gap-3 flex-wrap">
+                  <span>GI</span> <span className="font-handwritten text-7xl sm:text-8xl lg:text-9xl font-semibold text-[#467C32] dark:text-[#88D462]">Journal</span>
+                </h1>
+                <p className="mt-2 text-stone-700 dark:text-stone-300 font-handwritten text-3xl sm:text-4xl max-w-xl leading-relaxed">
+                  Ieraksti, notikumi un pārdomas ceļojumā
+                </p>
+              </motion.div>
             </div>
 
-            {/* Sticky/Prominent Day Counter Hero Badge */}
+            {/* Frameless Day Counter */}
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="w-full lg:w-auto bg-[#18201B] text-stone-50 dark:bg-[#141A16] dark:border dark:border-[#233227] rounded-3xl p-5 sm:p-6 flex items-center justify-between gap-8 shadow-xl relative overflow-hidden"
+              className="w-full lg:w-auto flex items-center justify-between gap-6 py-2 px-1 relative"
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#88D462]/10 rounded-full blur-2xl pointer-events-none" />
-              
               <div className="flex flex-col">
-                <span className="text-4xl sm:text-5xl font-extralight tracking-tight font-sans text-[#88D462] uppercase">
-                  {totalDays} dienas
+                <span className="text-4xl sm:text-5xl lg:text-6xl font-handwritten text-[#467C32] dark:text-[#88D462] font-bold leading-none">
+                  {totalDays} <span className="text-3xl sm:text-4xl font-handwritten text-[#467C32] dark:text-[#88D462]">dienas</span>
                 </span>
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="text-red-400 p-2.5 rounded-2xl bg-white/10 dark:bg-white/5">
-                  <Heart className="w-5 h-5 fill-red-500/20 text-red-400" />
+                <div className="text-red-500 p-2 rounded-full bg-red-500/10 dark:bg-red-500/15">
+                  <Heart className="w-5 h-5 fill-red-500 text-red-500 animate-pulse" />
                 </div>
 
                 <button
                   onClick={() => setDarkMode(!darkMode)}
                   id="btn_toggle_theme"
-                  className="w-12 h-6 bg-stone-800 dark:bg-stone-950 rounded-full p-1 border border-stone-700 dark:border-stone-800 cursor-pointer relative transition-colors"
+                  className="w-12 h-6 bg-stone-300/80 dark:bg-stone-800 rounded-full p-1 border border-stone-400/30 dark:border-stone-700 cursor-pointer relative transition-colors"
                   aria-label="Pārslēgt tumšo režīmu"
                 >
                   <motion.div 
@@ -332,7 +332,7 @@ export default function App() {
                     className={`w-4 h-4 rounded-full flex items-center justify-center ${
                       darkMode 
                         ? 'bg-[#88D462] translate-x-6 text-stone-950' 
-                        : 'bg-stone-100 text-stone-900'
+                        : 'bg-stone-900 text-stone-100'
                     }`}
                   >
                     {darkMode ? <Sun className="w-2.5 h-2.5" /> : <Moon className="w-2.5 h-2.5" />}
