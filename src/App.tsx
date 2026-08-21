@@ -310,8 +310,8 @@ export default function App() {
               <div className="absolute top-0 right-0 w-32 h-32 bg-[#88D462]/10 rounded-full blur-2xl pointer-events-none" />
               
               <div className="flex flex-col">
-                <span className="text-4xl sm:text-5xl font-extralight tracking-tight font-sans text-[#88D462]">
-                  {totalDays} <span className="text-xs font-mono text-[#88D462] uppercase tracking-wider">dienas</span>
+                <span className="text-4xl sm:text-5xl font-extralight tracking-tight font-sans text-[#88D462] uppercase">
+                  {totalDays} dienas
                 </span>
               </div>
 
