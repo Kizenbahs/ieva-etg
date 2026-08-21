@@ -454,7 +454,7 @@ export default function App() {
                           {featuredEvent.title}
                         </h2>
 
-                        <div className="text-stone-700 dark:text-stone-300 text-base sm:text-lg leading-relaxed font-sans line-clamp-4 drop-cap">
+                        <div className="text-stone-700 dark:text-stone-300 text-base sm:text-lg leading-relaxed font-sans line-clamp-4">
                           {renderFormattedText(featuredEvent.description)}
                         </div>
                       </div>
@@ -493,16 +493,6 @@ export default function App() {
 
               {/* ARTICLE GRID / LIST SECTION */}
               <section className="w-full flex flex-col gap-6">
-                {!searchQuery && gridEvents.length > 0 && (
-                  <div className="flex items-center justify-between border-b border-[#E2DDD0] dark:border-stone-800 pb-3">
-                    <h3 className="font-serif text-2xl font-semibold text-stone-900 dark:text-stone-100 italic">
-                      Visi Žurnāla Ieraksti
-                    </h3>
-                    <span className="text-xs font-mono uppercase text-stone-400 tracking-widest">
-                      Hronika
-                    </span>
-                  </div>
-                )}
 
                 <div
                   className={`w-full gap-6 ${
