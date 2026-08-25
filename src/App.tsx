@@ -293,11 +293,11 @@ export default function App() {
                 transition={{ duration: 0.8 }}
                 className="flex flex-col"
               >
-                <h1 className="font-serif text-6xl sm:text-7xl lg:text-8xl font-black tracking-tight leading-none text-stone-900 dark:text-stone-50 flex items-baseline gap-3 flex-wrap">
-                  <span>GI</span> <span className="font-handwritten text-7xl sm:text-8xl lg:text-9xl font-semibold text-[#467C32] dark:text-[#88D462]">Journal</span>
+                <h1 className="font-handwritten text-7xl sm:text-8xl lg:text-9xl font-semibold leading-none">
+                  <span className="text-[#467C32] dark:text-[#88D462]">GI</span><span className="text-stone-900 dark:text-stone-50">žurnāls</span>
                 </h1>
                 <p className="mt-2 text-stone-700 dark:text-stone-300 font-handwritten text-3xl sm:text-4xl max-w-xl leading-relaxed">
-                  Ieraksti, notikumi un pārdomas ceļojumā
+                  Ieraksti, notikumi, pārdomas ceļojumā
                 </p>
               </motion.div>
             </div>
@@ -319,25 +319,6 @@ export default function App() {
                 <div className="text-red-500 p-2 rounded-full bg-red-500/10 dark:bg-red-500/15">
                   <Heart className="w-5 h-5 fill-red-500 text-red-500 animate-pulse" />
                 </div>
-
-                <button
-                  onClick={() => setDarkMode(!darkMode)}
-                  id="btn_toggle_theme"
-                  className="w-12 h-6 bg-stone-300/80 dark:bg-stone-800 rounded-full p-1 border border-stone-400/30 dark:border-stone-700 cursor-pointer relative transition-colors"
-                  aria-label="Pārslēgt tumšo režīmu"
-                >
-                  <motion.div 
-                    layout
-                    transition={{ type: "spring", stiffness: 700, damping: 30 }}
-                    className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                      darkMode 
-                        ? 'bg-[#88D462] translate-x-6 text-stone-950' 
-                        : 'bg-stone-900 text-stone-100'
-                    }`}
-                  >
-                    {darkMode ? <Sun className="w-2.5 h-2.5" /> : <Moon className="w-2.5 h-2.5" />}
-                  </motion.div>
-                </button>
               </div>
             </motion.div>
           </div>
@@ -366,7 +347,7 @@ export default function App() {
 
             {/* Layout Toggle & Article Counter */}
             <div className="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-4">
-              <span className="text-xs font-mono uppercase tracking-wider text-stone-500">
+              <span className="text-xs font-mono tracking-wider text-stone-500">
                 {filteredEvents.length} {filteredEvents.length === 1 ? 'Ieraksts' : 'Ieraksti'}
               </span>
 
@@ -395,6 +376,18 @@ export default function App() {
                 >
                   <List className="w-4 h-4" />
                   <span className="hidden sm:inline">Saraksts</span>
+                </button>
+
+                {/* Dark/Light Mode Toggle */}
+                <div className="w-px h-4 bg-stone-300 dark:bg-stone-700 mx-0.5" />
+                <button
+                  onClick={() => setDarkMode(!darkMode)}
+                  id="btn_toggle_theme"
+                  className="p-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-all text-stone-500 hover:text-stone-900 dark:hover:text-stone-200"
+                  title={darkMode ? 'Gaišais režīms' : 'Tumšais režīms'}
+                  aria-label="Pārslēgt tumšo režīmu"
+                >
+                  {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                 </button>
               </div>
             </div>
