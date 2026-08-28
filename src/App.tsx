@@ -289,7 +289,7 @@ export default function App() {
   const gridEvents = !searchQuery && filteredEvents.length > 0 ? filteredEvents.slice(1) : filteredEvents;
 
   return (
-    <div className="min-h-screen w-full bg-[#F4F0E6] text-stone-900 dark:bg-[#0E120F] dark:text-stone-100 flex flex-col items-center selection:bg-lime-600 selection:text-white transition-colors duration-500 relative pb-24">
+    <div className="min-h-screen w-full overflow-x-hidden bg-[#F4F0E6] text-stone-900 dark:bg-[#0E120F] dark:text-stone-100 flex flex-col items-center selection:bg-lime-600 selection:text-white transition-colors duration-500 relative pb-24">
       {/* Ambient background blur elements for dark mode */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden hidden dark:block">
         <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[55%] rounded-full bg-[#1c3a1b] filter blur-[140px] opacity-40 animate-float-1" />
@@ -352,13 +352,7 @@ export default function App() {
             </div>
 
             {/* Right Controls */}
-            <div className="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-5">
-              {/* Article Count styled as a tag */}
-              <span className="text-xs font-mono tracking-wider text-stone-500 dark:text-stone-400 bg-stone-200/40 dark:bg-[#141A16] border border-[#DCD5C5]/60 dark:border-[#233227]/60 px-3 py-1.5 rounded-xl">
-                <span className="font-bold text-[#467C32] dark:text-[#88D462] mr-1">{filteredEvents.length}</span> 
-                {filteredEvents.length === 1 ? 'Ieraksts' : 'Ieraksti'}
-              </span>
-
+            <div className="w-full sm:w-auto flex items-center justify-end gap-3">
               {/* Segmented layout controller */}
               <div className="flex items-center gap-1 bg-stone-200/50 dark:bg-[#141A16] p-1 rounded-2xl border border-[#DCD5C5] dark:border-[#233227]">
                 <button
