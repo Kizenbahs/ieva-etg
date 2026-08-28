@@ -330,7 +330,7 @@ export default function App() {
           </div>
 
           {/* Controls & Filter Bar */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4">
+          <div className="flex flex-col items-center gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
             {/* Search Input */}
             <div className="relative w-full sm:w-80 group">
               <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-[#467C32] dark:group-focus-within:text-[#88D462] transition-colors" />
@@ -351,8 +351,8 @@ export default function App() {
               )}
             </div>
 
-            {/* Right Controls */}
-            <div className="w-full sm:w-auto flex items-center justify-end gap-3">
+            {/* Right Controls: toggle on top, counter below */}
+            <div className="flex flex-col items-center gap-2 sm:items-end">
               {/* Segmented layout controller */}
               <div className="flex items-center gap-1 bg-stone-200/50 dark:bg-[#141A16] p-1 rounded-2xl border border-[#DCD5C5] dark:border-[#233227]">
                 <button
@@ -393,6 +393,11 @@ export default function App() {
                   {darkMode ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
                 </button>
               </div>
+
+              {/* Post counter below the toggle */}
+              <span className="text-xs font-mono tracking-wider text-stone-400 dark:text-stone-500">
+                {filteredEvents.length} {filteredEvents.length === 1 ? 'ieraksts' : 'ieraksti'}
+              </span>
             </div>
           </div>
         </header>
