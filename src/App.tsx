@@ -195,6 +195,23 @@ export default function App() {
   const [selectedPost, setSelectedPost] = useState<CalendarEventType | null>(null);
   const [likedPosts, setLikedPosts] = useState<Record<number, boolean>>({});
 
+  const formattedDate = useMemo(() => {
+    const dateStr = new Intl.DateTimeFormat("lv-LV", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    }).format(currentTime);
+    
+    const timeStr = currentTime.toLocaleTimeString("lv-LV", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    });
+    
+    return `${dateStr.charAt(0).toUpperCase()}${dateStr.slice(1)} • ${timeStr}`;
+  }, [currentTime]);
+
   const fetchCalendar = async () => {
     setLoadingCalendar(true);
     const fallbackEvents: CalendarEventType[] = [
@@ -282,112 +299,104 @@ export default function App() {
       <div className="w-full max-w-[1240px] px-4 sm:px-6 lg:px-8 z-10 flex flex-col">
         
         {/* Top Editorial Header */}
-        <header className="w-full pt-8 pb-6 border-b border-[#E2DDD0] dark:border-stone-800 flex flex-col gap-6">
-
-          {/* Main Magazine Header Masthead */}
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 py-6">
-            <div className="flex-1 flex flex-col gap-2">
-              <motion.div 
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
-                className="flex flex-col"
-              >
-                <h1 className="font-handwritten text-7xl sm:text-8xl lg:text-9xl font-semibold leading-none">
-                  <span className="text-[#467C32] dark:text-[#88D462]">GI</span><span className="text-stone-900 dark:text-stone-50">žurnāls</span>
-                </h1>
-                <p className="mt-2 text-stone-700 dark:text-stone-300 font-handwritten text-3xl sm:text-4xl max-w-xl leading-relaxed">
-                  Ieraksti, notikumi, pārdomas ceļojumā
-                </p>
-              </motion.div>
-            </div>
-
-            {/* Frameless Day Counter */}
+        <header className="w-full pt-4 pb-6 flex flex-col gap-2 select-none">
+          {/* Centered Editorial Masthead */}
+          <div className="flex flex-col items-center justify-center py-6 sm:py-8 text-center">
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="w-full lg:w-auto flex items-center justify-between gap-6 py-2 px-1 relative"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="flex flex-col items-center relative"
             >
-              <div className="flex flex-col">
-                <span className="text-4xl sm:text-5xl lg:text-6xl font-handwritten text-[#467C32] dark:text-[#88D462] font-bold leading-none">
-                  {totalDays} <span className="text-3xl sm:text-4xl font-handwritten text-[#467C32] dark:text-[#88D462]">dienas</span>
-                </span>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="text-red-500 p-2 rounded-full bg-red-500/10 dark:bg-red-500/15">
-                  <Heart className="w-5 h-5 fill-red-500 text-red-500 animate-pulse" />
-                </div>
+              <h1 className="font-handwritten text-7xl sm:text-8xl md:text-9xl lg:text-[9.5rem] font-semibold leading-none select-none tracking-tight">
+                <span className="text-[#467C32] dark:text-[#88D462] transition-colors duration-500">GI</span>
+                <span className="text-stone-900 dark:text-stone-50 transition-colors duration-500">žurnāls</span>
+              </h1>
+              
+              <div className="mt-3 sm:mt-5 w-full max-w-xl flex items-center justify-center relative">
+                <p className="text-stone-700 dark:text-stone-300 font-serif italic text-lg sm:text-xl tracking-wider px-4">
+                  Ieraksti, notikumi, pārdomas
+                </p>
               </div>
             </motion.div>
           </div>
 
+          {/* Utility Top Bar (now under Tagline) */}
+          <div className="w-full flex items-center justify-center py-2">
+            <span className="text-2xl font-bold font-handwritten text-[#467C32] dark:text-[#88D462] bg-[#467C32]/10 dark:bg-[#88D462]/10 px-6 py-2 rounded-full flex items-center gap-3 border border-[#467C32]/20 dark:border-[#88D462]/20 shadow-sm">
+              {totalDays} dienas
+              <Heart className="w-5 h-5 fill-red-500 text-red-500 animate-pulse" />
+            </span>
+          </div>
+
           {/* Controls & Filter Bar */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-[#E2DDD0] dark:border-stone-800">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4">
             {/* Search Input */}
-            <div className="relative w-full sm:w-80">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
+            <div className="relative w-full sm:w-80 group">
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-[#467C32] dark:group-focus-within:text-[#88D462] transition-colors" />
               <input
                 type="text"
                 placeholder="Meklēt rakstos..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 text-sm rounded-full bg-stone-200/70 dark:bg-[#141A16] border border-[#DCD5C5] dark:border-[#233227] focus:outline-none focus:border-[#467C32] dark:focus:border-[#88D462] transition-all text-stone-900 dark:text-stone-100 placeholder:text-stone-500"
+                className="w-full pl-10 pr-10 py-2.5 text-sm rounded-2xl bg-stone-200/40 hover:bg-stone-200/60 focus:bg-white dark:bg-[#141A16] dark:hover:bg-[#18211b] dark:focus:bg-[#111612] border border-[#DCD5C5] dark:border-[#233227] focus:border-[#467C32] dark:focus:border-[#88D462] focus:ring-2 focus:ring-[#467C32]/10 dark:focus:ring-[#88D462]/10 focus:outline-none transition-all duration-300 text-stone-900 dark:text-stone-100 placeholder:text-stone-500 font-sans"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 transition-colors p-0.5 rounded-full hover:bg-stone-300/40 dark:hover:bg-stone-800"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
 
-            {/* Layout Toggle & Article Counter */}
-            <div className="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-4">
-              <span className="text-xs font-mono tracking-wider text-stone-500">
-                {filteredEvents.length} {filteredEvents.length === 1 ? 'Ieraksts' : 'Ieraksti'}
+            {/* Right Controls */}
+            <div className="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-5">
+              {/* Article Count styled as a tag */}
+              <span className="text-xs font-mono tracking-wider text-stone-500 dark:text-stone-400 bg-stone-200/40 dark:bg-[#141A16] border border-[#DCD5C5]/60 dark:border-[#233227]/60 px-3 py-1.5 rounded-xl">
+                <span className="font-bold text-[#467C32] dark:text-[#88D462] mr-1">{filteredEvents.length}</span> 
+                {filteredEvents.length === 1 ? 'Ieraksts' : 'Ieraksti'}
               </span>
 
-              <div className="flex items-center gap-1 bg-stone-200/70 dark:bg-[#141A16] p-1 rounded-xl border border-[#DCD5C5] dark:border-[#233227]">
+              {/* Segmented layout controller */}
+              <div className="flex items-center gap-1 bg-stone-200/50 dark:bg-[#141A16] p-1 rounded-2xl border border-[#DCD5C5] dark:border-[#233227]">
                 <button
                   onClick={() => setLayoutMode("grid")}
-                  className={`p-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-all ${
+                  className={`px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition-all duration-300 ${
                     layoutMode === "grid"
-                      ? "bg-white dark:bg-stone-800 text-[#467C32] dark:text-[#88D462] shadow-sm font-medium"
-                      : "text-stone-500 hover:text-stone-900 dark:hover:text-stone-200"
+                      ? "bg-white dark:bg-stone-800 text-[#467C32] dark:text-[#88D462] shadow-sm font-semibold border border-[#DCD5C5]/30 dark:border-[#233227]/50"
+                      : "text-stone-500 hover:text-stone-950 dark:hover:text-stone-200 font-medium"
                   }`}
                   title="Žurnāla Tīkls"
                 >
-                  <LayoutGrid className="w-4 h-4" />
-                  <span className="hidden sm:inline">Kartiņas</span>
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                  <span>Kartiņas</span>
                 </button>
 
                 <button
                   onClick={() => setLayoutMode("list")}
-                  className={`p-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-all ${
+                  className={`px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition-all duration-300 ${
                     layoutMode === "list"
-                      ? "bg-white dark:bg-stone-800 text-[#467C32] dark:text-[#88D462] shadow-sm font-medium"
-                      : "text-stone-500 hover:text-stone-900 dark:hover:text-stone-200"
+                      ? "bg-white dark:bg-stone-800 text-[#467C32] dark:text-[#88D462] shadow-sm font-semibold border border-[#DCD5C5]/30 dark:border-[#233227]/50"
+                      : "text-stone-500 hover:text-stone-950 dark:hover:text-stone-200 font-medium"
                   }`}
                   title="Saraksta Skats"
                 >
-                  <List className="w-4 h-4" />
-                  <span className="hidden sm:inline">Saraksts</span>
+                  <List className="w-3.5 h-3.5" />
+                  <span>Saraksts</span>
                 </button>
 
                 {/* Dark/Light Mode Toggle */}
-                <div className="w-px h-4 bg-stone-300 dark:bg-stone-700 mx-0.5" />
+                <div className="w-px h-4 bg-stone-300 dark:bg-stone-700 mx-1" />
                 <button
                   onClick={() => setDarkMode(!darkMode)}
                   id="btn_toggle_theme"
-                  className="p-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-all text-stone-500 hover:text-stone-900 dark:hover:text-stone-200"
+                  className="p-1.5 rounded-xl text-xs flex items-center justify-center transition-all duration-300 text-stone-500 hover:text-stone-950 dark:hover:text-stone-200 hover:bg-white/40 dark:hover:bg-stone-800/40"
                   title={darkMode ? 'Gaišais režīms' : 'Tumšais režīms'}
                   aria-label="Pārslēgt tumšo režīmu"
                 >
-                  {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                  {darkMode ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
                 </button>
               </div>
             </div>
