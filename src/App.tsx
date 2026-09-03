@@ -461,7 +461,7 @@ export default function App() {
 
                       <div className="mt-8 pt-6 border-t border-[#E8E3D5] dark:border-[#1F2B23] flex items-center justify-between">
                         <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#467C32] dark:text-[#88D462] group-hover:translate-x-1.5 transition-transform">
-                          <span>Lasīt pilnu rakstu</span>
+                          <span>Atvērt</span>
                           <ArrowUpRight className="w-4 h-4" />
                         </span>
 
@@ -568,7 +568,7 @@ export default function App() {
                           {/* Footer action bar */}
                           <div className="pt-4 border-t border-[#E8E3D5] dark:border-[#1F2B23] flex items-center justify-between text-xs">
                             <span className="font-semibold text-stone-900 dark:text-stone-200 group-hover:text-[#467C32] dark:group-hover:text-[#88D462] flex items-center gap-1 transition-colors">
-                              <span>Lasīt tālāk</span>
+                              <span>Atvērt</span>
                               <ArrowUpRight className="w-3.5 h-3.5" />
                             </span>
 
