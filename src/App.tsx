@@ -641,11 +641,7 @@ export default function App() {
               </button>
 
               {/* Modal Metadata Header */}
-              <div className="flex items-center gap-3 text-xs font-mono text-[#467C32] dark:text-[#88D462] mb-4">
-                <span className="px-2.5 py-0.5 rounded-full bg-[#558B2F]/10 dark:bg-[#88D462]/10 border border-[#558B2F]/20 uppercase tracking-widest">
-                  IERAKSTS
-                </span>
-                <span>•</span>
+              <div className="flex items-center text-xs font-mono text-[#467C32] dark:text-[#88D462] mb-4">
                 <span>{selectedPost.date}</span>
               </div>
 
@@ -668,20 +664,6 @@ export default function App() {
               {/* Modal Body Copy */}
               <div className="font-sans text-stone-800 dark:text-stone-200 text-base sm:text-lg leading-relaxed space-y-4">
                 {renderFormattedText(selectedPost.description)}
-              </div>
-
-              {/* Modal Footer */}
-              <div className="mt-10 pt-6 border-t border-[#E8E3D5] dark:border-[#1F2B23] flex items-center justify-between">
-                <span className="text-xs font-mono text-stone-400">
-                  Pievienots GI Hronikai
-                </span>
-
-                <button
-                  onClick={() => setSelectedPost(null)}
-                  className="px-6 py-2.5 rounded-full bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 text-xs font-mono uppercase tracking-wider hover:opacity-90 transition-opacity"
-                >
-                  Aizvērt lasītāju
-                </button>
               </div>
             </motion.div>
           </div>
