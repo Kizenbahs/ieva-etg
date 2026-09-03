@@ -284,9 +284,8 @@ export default function App() {
     setLikedPosts((prev) => ({ ...prev, [index]: !prev[index] }));
   };
 
-  // Lead story is the first item when available and no search is active
+  // Lead story is the first item when available and no search is active (shown on desktop)
   const featuredEvent = !searchQuery && filteredEvents.length > 0 ? filteredEvents[0] : null;
-  const gridEvents = !searchQuery && filteredEvents.length > 0 ? filteredEvents.slice(1) : filteredEvents;
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-[#F4F0E6] text-stone-900 dark:bg-[#0E120F] dark:text-stone-100 flex flex-col items-center selection:bg-lime-600 selection:text-white transition-colors duration-500 relative pb-24">
@@ -430,9 +429,9 @@ export default function App() {
             </div>
           ) : (
             <>
-              {/* FEATURED LEAD STORY (Shown when not searching and events exist) */}
+              {/* FEATURED LEAD STORY (Shown on desktop when not searching and events exist) */}
               {featuredEvent && (
-                <section className="w-full">
+                <section className="w-full hidden md:block">
                   <motion.div
                     initial={{ opacity: 0, y: 25 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -502,8 +501,9 @@ export default function App() {
                       : "flex flex-col"
                   }`}
                 >
-                  {gridEvents.map((event, idx) => {
-                    const globalIndex = searchQuery ? idx : idx + 1;
+                  {filteredEvents.map((event, idx) => {
+                    const globalIndex = idx;
+                    const isFeaturedOnDesktop = !searchQuery && idx === 0;
                     return (
                       <motion.article
                         key={idx}
@@ -512,7 +512,9 @@ export default function App() {
                         viewport={{ once: true, amount: 0.1 }}
                         transition={{ duration: 0.6, delay: (idx % 6) * 0.05 }}
                         onClick={() => setSelectedPost(event)}
-                        className={`group cursor-pointer rounded-3xl p-6 sm:p-8 bg-[#FAF7F0] dark:bg-[#141A16]/90 border border-[#E2DDD0] dark:border-[#233227] shadow-sm hover:shadow-xl dark:hover:border-[#88D462]/40 transition-all duration-400 flex ${
+                        className={`group cursor-pointer rounded-3xl p-6 sm:p-8 bg-[#FAF7F0] dark:bg-[#141A16]/90 border border-[#E2DDD0] dark:border-[#233227] shadow-sm hover:shadow-xl dark:hover:border-[#88D462]/40 transition-all duration-400 ${
+                          isFeaturedOnDesktop ? "md:hidden " : ""
+                        }flex ${
                           layoutMode === "list"
                             ? "flex-col md:flex-row md:items-center gap-6"
                             : "flex-col justify-between"
@@ -550,7 +552,7 @@ export default function App() {
 
                             {/* Card Title */}
                             <h4 className={`font-serif font-semibold text-stone-900 dark:text-stone-100 leading-tight mb-3 group-hover:text-[#467C32] dark:group-hover:text-[#88D462] transition-colors ${
-                              layoutMode === "list" ? "text-2xl sm:text-3xl" : "text-xl sm:text-2xl"
+                              layoutMode === "list" ? "text-[1.65rem] sm:text-3xl" : "text-2xl sm:text-2xl"
                             }`}>
                               {event.title}
                             </h4>
