@@ -551,25 +551,25 @@ export default function App() {
                             </div>
 
                             {/* Card Title */}
-                            <h4 className={`font-serif font-semibold text-stone-900 dark:text-stone-100 leading-tight mb-3 group-hover:text-[#467C32] dark:group-hover:text-[#88D462] transition-colors ${
-                              layoutMode === "list" ? "text-[1.65rem] sm:text-3xl" : "text-2xl sm:text-2xl"
+                            <h4 className={`font-serif font-semibold text-stone-900 dark:text-stone-100 leading-[1.2] mb-3.5 group-hover:text-[#467C32] dark:group-hover:text-[#88D462] transition-colors ${
+                              layoutMode === "list" ? "text-[2.15rem] sm:text-3xl" : "text-[1.95rem] sm:text-2xl"
                             }`}>
                               {event.title}
                             </h4>
 
                             {/* Excerpt */}
                             {event.description && (
-                              <div className="text-stone-600 dark:text-stone-300 text-sm leading-relaxed font-sans line-clamp-3 mb-6">
+                              <div className="text-stone-600 dark:text-stone-300 text-[1.1rem] sm:text-sm leading-relaxed font-sans line-clamp-4 sm:line-clamp-3 mb-6">
                                 {renderFormattedText(event.description)}
                               </div>
                             )}
                           </div>
 
                           {/* Footer action bar */}
-                          <div className="pt-4 border-t border-[#E8E3D5] dark:border-[#1F2B23] flex items-center justify-between text-xs">
+                          <div className="pt-4 border-t border-[#E8E3D5] dark:border-[#1F2B23] flex items-center justify-between text-sm sm:text-xs">
                             <span className="font-semibold text-stone-900 dark:text-stone-200 group-hover:text-[#467C32] dark:group-hover:text-[#88D462] flex items-center gap-1 transition-colors">
                               <span>Atvērt</span>
-                              <ArrowUpRight className="w-3.5 h-3.5" />
+                              <ArrowUpRight className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                             </span>
 
                             <div className="flex items-center gap-2">
@@ -646,7 +646,7 @@ export default function App() {
               </div>
 
               {/* Modal Article Title */}
-              <h2 className="font-serif text-3xl sm:text-5xl font-bold text-stone-900 dark:text-stone-50 leading-tight mb-8">
+              <h2 className="font-serif text-[2.45rem] sm:text-5xl font-bold text-stone-900 dark:text-stone-50 leading-tight mb-8">
                 {selectedPost.title}
               </h2>
 
@@ -662,7 +662,7 @@ export default function App() {
               )}
 
               {/* Modal Body Copy */}
-              <div className="font-sans text-stone-800 dark:text-stone-200 text-base sm:text-lg leading-relaxed space-y-4">
+              <div className="font-sans text-stone-800 dark:text-stone-200 text-lg sm:text-lg leading-relaxed space-y-4">
                 {renderFormattedText(selectedPost.description)}
               </div>
             </motion.div>
