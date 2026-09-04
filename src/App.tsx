@@ -7,8 +7,6 @@ import {
   Heart,
   BookOpen,
   Search,
-  LayoutGrid,
-  List,
   Calendar,
   Clock,
   X,
@@ -191,7 +189,6 @@ export default function App() {
   
   // Magazine UI State
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [layoutMode, setLayoutMode] = useState<"grid" | "list">("grid");
   const [selectedPost, setSelectedPost] = useState<CalendarEventType | null>(null);
   const [likedPosts, setLikedPosts] = useState<Record<number, boolean>>({});
 
@@ -298,7 +295,18 @@ export default function App() {
       <div className="w-full max-w-[1240px] px-4 sm:px-6 lg:px-8 z-10 flex flex-col">
         
         {/* Top Editorial Header */}
-        <header className="w-full pt-4 pb-6 flex flex-col gap-2 select-none">
+        <header className="w-full pt-4 pb-0 flex flex-col gap-2 select-none relative">
+          {/* Dark/Light Mode Toggle in top right corner */}
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            id="btn_toggle_theme"
+            className="absolute top-3 right-0 sm:top-4 p-2 sm:p-2.5 rounded-2xl bg-stone-200/50 hover:bg-stone-200/80 dark:bg-[#141A16] dark:hover:bg-[#1c241f] border border-[#DCD5C5] dark:border-[#233227] text-stone-600 dark:text-stone-300 transition-all duration-300 shadow-sm flex items-center justify-center cursor-pointer z-20"
+            title={darkMode ? 'Gaišais režīms' : 'Tumšais režīms'}
+            aria-label="Pārslēgt tumšo režīmu"
+          >
+            {darkMode ? <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-stone-600 dark:text-stone-300" />}
+          </button>
+
           {/* Centered Editorial Masthead */}
           <div className="flex flex-col items-center justify-center py-6 sm:py-8 text-center">
             <motion.div 
@@ -312,8 +320,8 @@ export default function App() {
                 <span className="text-stone-900 dark:text-stone-50 transition-colors duration-500">žurnāls</span>
               </h1>
               
-              <div className="mt-3 sm:mt-5 w-full max-w-xl flex items-center justify-center relative">
-                <p className="text-stone-700 dark:text-stone-300 font-serif italic text-lg sm:text-xl tracking-wider px-4">
+              <div className="mt-2 sm:mt-3 w-full max-w-xl flex items-center justify-center relative">
+                <p className="text-stone-600 dark:text-stone-400 font-handwritten text-2xl sm:text-3xl tracking-wide px-4">
                   Ieraksti, notikumi, pārdomas
                 </p>
               </div>
@@ -329,16 +337,16 @@ export default function App() {
           </div>
 
           {/* Controls & Filter Bar */}
-          <div className="flex flex-col items-center gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
-            {/* Search Input */}
+          {/* Search Bar */}
+          <div className="flex items-center pt-2 pb-[10px]">
             <div className="relative w-full sm:w-80 group">
               <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-[#467C32] dark:group-focus-within:text-[#88D462] transition-colors" />
               <input
                 type="text"
-                placeholder="Meklēt rakstos..."
+                aria-label="Meklēt rakstos"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-10 py-2.5 text-sm rounded-2xl bg-stone-200/40 hover:bg-stone-200/60 focus:bg-white dark:bg-[#141A16] dark:hover:bg-[#18211b] dark:focus:bg-[#111612] border border-[#DCD5C5] dark:border-[#233227] focus:border-[#467C32] dark:focus:border-[#88D462] focus:ring-2 focus:ring-[#467C32]/10 dark:focus:ring-[#88D462]/10 focus:outline-none transition-all duration-300 text-stone-900 dark:text-stone-100 placeholder:text-stone-500 font-sans"
+                className="w-full pl-10 pr-10 py-2.5 text-sm rounded-2xl bg-stone-200/40 hover:bg-stone-200/60 focus:bg-white dark:bg-[#141A16] dark:hover:bg-[#18211b] dark:focus:bg-[#111612] border border-[#DCD5C5] dark:border-[#233227] focus:border-[#467C32] dark:focus:border-[#88D462] focus:ring-2 focus:ring-[#467C32]/10 dark:focus:ring-[#88D462]/10 focus:outline-none transition-all duration-300 text-stone-900 dark:text-stone-100 font-sans"
               />
               {searchQuery && (
                 <button
@@ -349,60 +357,11 @@ export default function App() {
                 </button>
               )}
             </div>
-
-            {/* Right Controls: toggle on top, counter below */}
-            <div className="flex flex-col items-center gap-2 sm:items-end">
-              {/* Segmented layout controller */}
-              <div className="flex items-center gap-1 bg-stone-200/50 dark:bg-[#141A16] p-1 rounded-2xl border border-[#DCD5C5] dark:border-[#233227]">
-                <button
-                  onClick={() => setLayoutMode("grid")}
-                  className={`px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition-all duration-300 ${
-                    layoutMode === "grid"
-                      ? "bg-white dark:bg-stone-800 text-[#467C32] dark:text-[#88D462] shadow-sm font-semibold border border-[#DCD5C5]/30 dark:border-[#233227]/50"
-                      : "text-stone-500 hover:text-stone-950 dark:hover:text-stone-200 font-medium"
-                  }`}
-                  title="Žurnāla Tīkls"
-                >
-                  <LayoutGrid className="w-3.5 h-3.5" />
-                  <span>Kartiņas</span>
-                </button>
-
-                <button
-                  onClick={() => setLayoutMode("list")}
-                  className={`px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition-all duration-300 ${
-                    layoutMode === "list"
-                      ? "bg-white dark:bg-stone-800 text-[#467C32] dark:text-[#88D462] shadow-sm font-semibold border border-[#DCD5C5]/30 dark:border-[#233227]/50"
-                      : "text-stone-500 hover:text-stone-950 dark:hover:text-stone-200 font-medium"
-                  }`}
-                  title="Saraksta Skats"
-                >
-                  <List className="w-3.5 h-3.5" />
-                  <span>Saraksts</span>
-                </button>
-
-                {/* Dark/Light Mode Toggle */}
-                <div className="w-px h-4 bg-stone-300 dark:bg-stone-700 mx-1" />
-                <button
-                  onClick={() => setDarkMode(!darkMode)}
-                  id="btn_toggle_theme"
-                  className="p-1.5 rounded-xl text-xs flex items-center justify-center transition-all duration-300 text-stone-500 hover:text-stone-950 dark:hover:text-stone-200 hover:bg-white/40 dark:hover:bg-stone-800/40"
-                  title={darkMode ? 'Gaišais režīms' : 'Tumšais režīms'}
-                  aria-label="Pārslēgt tumšo režīmu"
-                >
-                  {darkMode ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-
-              {/* Post counter below the toggle */}
-              <span className="text-xs font-mono tracking-wider text-stone-400 dark:text-stone-500">
-                {filteredEvents.length} {filteredEvents.length === 1 ? 'ieraksts' : 'ieraksti'}
-              </span>
-            </div>
           </div>
         </header>
 
         {/* Main Content Area */}
-        <main className="mt-8 flex flex-col gap-12">
+        <main className="mt-0 flex flex-col gap-12">
           
           {loadingCalendar ? (
             <div className="w-full min-h-[400px] rounded-3xl border border-[#E2DDD0] dark:border-stone-800 bg-white/60 dark:bg-[#141A16]/60 flex flex-col items-center justify-center p-12 text-center">
@@ -491,16 +450,10 @@ export default function App() {
                 </section>
               )}
 
-              {/* ARTICLE GRID / LIST SECTION */}
+              {/* ARTICLE GRID SECTION */}
               <section className="w-full flex flex-col gap-6">
 
-                <div
-                  className={`w-full gap-6 ${
-                    layoutMode === "grid"
-                      ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-                      : "flex flex-col"
-                  }`}
-                >
+                <div className="w-full gap-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                   {filteredEvents.map((event, idx) => {
                     const globalIndex = idx;
                     const isFeaturedOnDesktop = !searchQuery && idx === 0;
@@ -514,21 +467,11 @@ export default function App() {
                         onClick={() => setSelectedPost(event)}
                         className={`group cursor-pointer rounded-3xl p-6 sm:p-8 bg-[#FAF7F0] dark:bg-[#141A16]/90 border border-[#E2DDD0] dark:border-[#233227] shadow-sm hover:shadow-xl dark:hover:border-[#88D462]/40 transition-all duration-400 ${
                           isFeaturedOnDesktop ? "md:hidden " : ""
-                        }flex ${
-                          layoutMode === "list"
-                            ? "flex-col md:flex-row md:items-center gap-6"
-                            : "flex-col justify-between"
-                        }`}
+                        }flex flex-col justify-between`}
                       >
                         {/* Image inside Grid Card */}
                         {event.imageUrl && (
-                          <div
-                            className={`w-full overflow-hidden rounded-2xl bg-stone-200/50 dark:bg-stone-800 mb-6 ${
-                              layoutMode === "list"
-                                ? "md:w-60 md:mb-0 shrink-0 aspect-[16/10]"
-                                : "aspect-[16/10]"
-                            }`}
-                          >
+                          <div className="w-full overflow-hidden rounded-2xl bg-stone-200/50 dark:bg-stone-800 mb-6 aspect-[16/10]">
                             <img
                               src={getDirectImageURL(event.imageUrl)}
                               alt={event.title}
@@ -551,9 +494,7 @@ export default function App() {
                             </div>
 
                             {/* Card Title */}
-                            <h4 className={`font-serif font-semibold text-stone-900 dark:text-stone-100 leading-[1.2] mb-3.5 group-hover:text-[#467C32] dark:group-hover:text-[#88D462] transition-colors ${
-                              layoutMode === "list" ? "text-[2.15rem] sm:text-3xl" : "text-[1.95rem] sm:text-2xl"
-                            }`}>
+                            <h4 className="font-serif font-semibold text-stone-900 dark:text-stone-100 leading-[1.2] mb-3.5 group-hover:text-[#467C32] dark:group-hover:text-[#88D462] transition-colors text-[1.95rem] sm:text-2xl">
                               {event.title}
                             </h4>
 
