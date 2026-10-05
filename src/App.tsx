@@ -173,6 +173,55 @@ const renderFormattedText = (text: string) => {
   }
 };
 
+interface ArchiveSearchProps {
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  count: number;
+}
+
+const ArchiveSearch: React.FC<ArchiveSearchProps> = ({ searchQuery, setSearchQuery, count }) => {
+  return (
+    <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-0 sm:pb-4 sm:border-b border-[#E2DDD0] dark:border-[#233227]">
+      <div className="flex items-center justify-center sm:justify-start gap-3 w-full sm:w-auto">
+        {searchQuery ? (
+          <h3 className="font-serif text-2xl font-semibold text-stone-900 dark:text-stone-100">
+            Meklēšanas rezultāti
+          </h3>
+        ) : (
+          <h3 className="hidden sm:block font-serif text-2xl font-semibold text-stone-900 dark:text-stone-100">
+            Arhīvs
+          </h3>
+        )}
+        <span className="hidden sm:inline text-xs font-mono text-stone-500 dark:text-stone-400 bg-stone-200/50 dark:bg-[#141A16] px-2.5 py-1 rounded-full border border-[#DCD5C5]/60 dark:border-[#233227]/60">
+          {count} {count === 1 ? "ieraksts" : "ieraksti"}
+        </span>
+      </div>
+
+      <div className="relative hidden sm:block w-full sm:w-80 group">
+        <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-[#467C32] dark:group-focus-within:text-[#88D462] transition-colors" />
+        <input
+          type="text"
+          aria-label="Meklēt arhīvā"
+          placeholder="Meklēt arhīvā..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-10 pr-10 py-2.5 text-sm rounded-2xl bg-stone-200/40 hover:bg-stone-200/60 focus:bg-white dark:bg-[#141A16] dark:hover:bg-[#18211b] dark:focus:bg-[#111612] border border-[#DCD5C5] dark:border-[#233227] focus:border-[#467C32] dark:focus:border-[#88D462] focus:ring-2 focus:ring-[#467C32]/10 dark:focus:ring-[#88D462]/10 focus:outline-none transition-all duration-300 text-stone-900 dark:text-stone-100 font-sans placeholder:text-stone-400 dark:placeholder:text-stone-500"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery("")}
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 transition-colors p-0.5 rounded-full hover:bg-stone-300/40 dark:hover:bg-stone-800 cursor-pointer"
+            aria-label="Notīrīt meklēšanu"
+            title="Notīrīt"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default function App() {
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     if (typeof window !== "undefined") {
@@ -300,7 +349,7 @@ export default function App() {
           <button
             onClick={() => setDarkMode(!darkMode)}
             id="btn_toggle_theme"
-            className="absolute top-3 right-0 sm:top-4 p-2 sm:p-2.5 rounded-2xl bg-stone-200/50 hover:bg-stone-200/80 dark:bg-[#141A16] dark:hover:bg-[#1c241f] border border-[#DCD5C5] dark:border-[#233227] text-stone-600 dark:text-stone-300 transition-all duration-300 shadow-sm flex items-center justify-center cursor-pointer z-20"
+            className="absolute top-3 right-0 sm:top-4 p-2 sm:p-2.5 rounded-2xl bg-stone-200/50 hover:bg-stone-200/80 dark:bg-[#141A16] dark:hover:bg-[#1c241f] border border-transparent text-stone-600 dark:text-stone-300 transition-all duration-300 flex items-center justify-center cursor-pointer z-20"
             title={darkMode ? 'Gaišais režīms' : 'Tumšais režīms'}
             aria-label="Pārslēgt tumšo režīmu"
           >
@@ -315,53 +364,30 @@ export default function App() {
               transition={{ duration: 0.8 }}
               className="flex flex-col items-center relative"
             >
-              <h1 className="font-handwritten text-7xl sm:text-8xl md:text-9xl lg:text-[9.5rem] font-semibold leading-none select-none tracking-tight">
+              <h1 className="font-handwritten text-7xl md:text-[4rem] lg:text-[4.75rem] font-semibold leading-none select-none tracking-tight">
                 <span className="text-[#467C32] dark:text-[#88D462] transition-colors duration-500">GI</span>
                 <span className="text-stone-900 dark:text-stone-50 transition-colors duration-500">žurnāls</span>
               </h1>
               
               <div className="mt-2 sm:mt-3 w-full max-w-xl flex items-center justify-center relative">
                 <p className="text-stone-600 dark:text-stone-400 font-handwritten text-2xl sm:text-3xl tracking-wide px-4">
-                  Ieraksti, notikumi, pārdomas
+                  Ieraksti, notikumi, {calendarEvents.length > 0 ? `${calendarEvents.length} ` : ""}pārdomas
                 </p>
               </div>
             </motion.div>
           </div>
 
           {/* Utility Top Bar (now under Tagline) */}
-          <div className="w-full flex items-center justify-center py-2">
+          <div className="w-full flex items-center justify-center pt-2 pb-6">
             <span className="text-2xl font-bold font-handwritten text-[#467C32] dark:text-[#88D462] bg-[#467C32]/10 dark:bg-[#88D462]/10 px-6 py-2 rounded-full flex items-center gap-3 border border-[#467C32]/20 dark:border-[#88D462]/20 shadow-sm">
               {totalDays} dienas
               <Heart className="w-5 h-5 fill-red-500 text-red-500 animate-pulse" />
             </span>
           </div>
-
-          {/* Controls & Filter Bar */}
-          {/* Search Bar */}
-          <div className="flex items-center pt-2 pb-[10px]">
-            <div className="relative w-full sm:w-80 group">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-[#467C32] dark:group-focus-within:text-[#88D462] transition-colors" />
-              <input
-                type="text"
-                aria-label="Meklēt rakstos"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-10 py-2.5 text-sm rounded-2xl bg-stone-200/40 hover:bg-stone-200/60 focus:bg-white dark:bg-[#141A16] dark:hover:bg-[#18211b] dark:focus:bg-[#111612] border border-[#DCD5C5] dark:border-[#233227] focus:border-[#467C32] dark:focus:border-[#88D462] focus:ring-2 focus:ring-[#467C32]/10 dark:focus:ring-[#88D462]/10 focus:outline-none transition-all duration-300 text-stone-900 dark:text-stone-100 font-sans"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 transition-colors p-0.5 rounded-full hover:bg-stone-300/40 dark:hover:bg-stone-800"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-          </div>
         </header>
 
         {/* Main Content Area */}
-        <main className="mt-0 flex flex-col gap-12">
+        <main className="mt-2 flex flex-col gap-10">
           
           {loadingCalendar ? (
             <div className="w-full min-h-[400px] rounded-3xl border border-[#E2DDD0] dark:border-stone-800 bg-white/60 dark:bg-[#141A16]/60 flex flex-col items-center justify-center p-12 text-center">
@@ -369,22 +395,6 @@ export default function App() {
               <p className="font-serif italic text-xl text-stone-600 dark:text-stone-400">
                 Lādē žurnāla ierakstus...
               </p>
-            </div>
-          ) : filteredEvents.length === 0 ? (
-            <div className="w-full min-h-[350px] rounded-3xl border border-[#E2DDD0] dark:border-stone-800 bg-white/60 dark:bg-[#141A16]/60 flex flex-col items-center justify-center p-12 text-center">
-              <BookOpen className="w-10 h-10 text-stone-400 mb-3 stroke-[1.5]" />
-              <h3 className="font-serif text-2xl text-stone-800 dark:text-stone-200">
-                Ieraksti nav atrasti
-              </h3>
-              <p className="text-sm text-stone-500 mt-1 max-w-md">
-                Mēģiniet izmantot citu meklēšanas frāzi vai notīrīt meklētāju.
-              </p>
-              <button
-                onClick={() => setSearchQuery("")}
-                className="mt-4 px-4 py-2 text-xs font-mono uppercase tracking-wider bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 rounded-full hover:opacity-90 transition-opacity"
-              >
-                Notīrīt meklēšanu
-              </button>
             </div>
           ) : (
             <>
@@ -452,8 +462,30 @@ export default function App() {
 
               {/* ARTICLE GRID SECTION */}
               <section className="w-full flex flex-col gap-6">
+                <ArchiveSearch
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  count={filteredEvents.length}
+                />
 
-                <div className="w-full gap-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                {filteredEvents.length === 0 ? (
+                  <div className="w-full min-h-[350px] rounded-3xl border border-[#E2DDD0] dark:border-stone-800 bg-white/60 dark:bg-[#141A16]/60 flex flex-col items-center justify-center p-12 text-center">
+                    <BookOpen className="w-10 h-10 text-stone-400 mb-3 stroke-[1.5]" />
+                    <h3 className="font-serif text-2xl text-stone-800 dark:text-stone-200">
+                      Ieraksti nav atrasti
+                    </h3>
+                    <p className="text-sm text-stone-500 mt-1 max-w-md">
+                      Mēģiniet izmantot citu meklēšanas frāzi vai notīrīt meklētāju.
+                    </p>
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="mt-4 px-4 py-2 text-xs font-mono uppercase tracking-wider bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 rounded-full hover:opacity-90 transition-opacity cursor-pointer"
+                    >
+                      Notīrīt meklēšanu
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-full gap-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                   {filteredEvents.map((event, idx) => {
                     const globalIndex = idx;
                     const isFeaturedOnDesktop = !searchQuery && idx === 0;
@@ -534,9 +566,10 @@ export default function App() {
                     );
                   })}
                 </div>
-              </section>
-            </>
-          )}
+              )}
+            </section>
+          </>
+        )}
         </main>
 
         {/* Editorial Footer */}
