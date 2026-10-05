@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response, NextFunction } from "express";
 import path from "path";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
@@ -6,6 +6,94 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
+
+// ---------------------------------------------------------------------------
+// Rate Limiter — in-memory sliding window per IP
+// ---------------------------------------------------------------------------
+type RateLimitStore = Map<string, number[]>; // IP -> array of request timestamps (ms)
+
+function createRateLimiter(maxRequests: number, windowMs: number) {
+  const store: RateLimitStore = new Map();
+
+  // Clean up old entries every 5 minutes to prevent memory leaks
+  setInterval(() => {
+    const now = Date.now();
+    for (const [ip, timestamps] of store.entries()) {
+      const recent = timestamps.filter(t => now - t < windowMs);
+      if (recent.length === 0) store.delete(ip);
+      else store.set(ip, recent);
+    }
+  }, 5 * 60 * 1000);
+
+  return (req: Request, res: Response, next: NextFunction) => {
+    const ip =
+      (req.headers["x-forwarded-for"] as string)?.split(",")[0].trim() ||
+      req.socket.remoteAddress ||
+      "unknown";
+    const now = Date.now();
+    const timestamps = (store.get(ip) || []).filter(t => now - t < windowMs);
+
+    if (timestamps.length >= maxRequests) {
+      res.setHeader("Retry-After", String(Math.ceil(windowMs / 1000)));
+      res.status(429).json({ error: "Pārāk daudz pieprasījumu. Mēģini vēlāk." });
+      return;
+    }
+
+    timestamps.push(now);
+    store.set(ip, timestamps);
+    next();
+  };
+}
+
+// 30 requests / minute for calendar (heavier endpoint)
+const calendarLimiter = createRateLimiter(30, 60 * 1000);
+// 60 requests / minute for quotes
+const quoteLimiter = createRateLimiter(60, 60 * 1000);
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Security Headers — applied to every response
+// ---------------------------------------------------------------------------
+app.disable("x-powered-by"); // Don't advertise Express
+
+app.use((_req: Request, res: Response, next: NextFunction) => {
+  // Prevent this API from being embedded in iframes
+  res.setHeader("X-Frame-Options", "DENY");
+  // Stop browsers from sniffing content types
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  // Only send origin in referrer, never the full URL
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  // Disable browser features that aren't needed by an API
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  // Strict CSP: this is a pure API — no scripts, styles or frames needed
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'none'; frame-ancestors 'none'"
+  );
+  // Force HTTPS in browsers that support HSTS (6 months)
+  res.setHeader("Strict-Transport-Security", "max-age=15552000; includeSubDomains");
+  next();
+});
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// CORS — only allow requests from the configured origin
+// ---------------------------------------------------------------------------
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "http://localhost:5173";
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const origin = req.headers.origin || "";
+  // Allow same-origin requests (no Origin header) and the configured domain
+  if (!origin || origin === ALLOWED_ORIGIN) {
+    res.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
+    res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    next();
+  } else {
+    res.status(403).json({ error: "Forbidden" });
+  }
+});
+// ---------------------------------------------------------------------------
 
 // Initialize Gemini SDK with client user-agent for telemetry
 let ai: GoogleGenAI | null = null;
@@ -47,9 +135,14 @@ const quoteCache: Record<string, { quote: string; author: string }> = {};
 app.use(express.json());
 
 // API: Get daily motivational quote in Latvian
-app.get("/api/quote", async (req, res) => {
-  const todayStr = (req.query.date as string) || new Date().toISOString().split('T')[0];
-  
+app.get("/api/quote", quoteLimiter, async (req, res) => {
+  // Strict validation: must be YYYY-MM-DD — prevent prompt injection into Gemini
+  const rawDate = req.query.date as string | undefined;
+  const DATE_RE = /^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])$/;
+  const todayStr = rawDate && DATE_RE.test(rawDate)
+    ? rawDate
+    : new Date().toISOString().split("T")[0];
+
   // Return cached quote if exists
   if (quoteCache[todayStr]) {
     return res.json(quoteCache[todayStr]);
@@ -213,7 +306,7 @@ function parseICS(icsString: string) {
   return events;
 }
 
-app.get("/api/calendar", async (req, res) => {
+app.get("/api/calendar", calendarLimiter, async (req, res) => {
   res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   const calendarId = process.env.GOOGLE_CALENDAR_ID;
   const apiKey = process.env.GOOGLE_API_KEY;
