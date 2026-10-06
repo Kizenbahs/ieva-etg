@@ -11,8 +11,6 @@ import {
   X, 
   Sparkles, 
   ArrowUpRight,
-  Lock,
-  Unlock,
   Delete
 } from "lucide-react";
 
@@ -433,9 +431,6 @@ export default function App() {
   const [selectedPost, setSelectedPost] = useState<CalendarEventType | null>(null);
   const [likedPosts, setLikedPosts] = useState<Record<number, boolean>>({});
 
-  const handleLock = () => {
-    setAuthToken(null);
-  };
 
   const formattedDate = useMemo(() => {
     const dateStr = new Intl.DateTimeFormat("lv-LV", {
@@ -472,7 +467,7 @@ export default function App() {
         }
       });
       if (res.status === 401) {
-        handleLock();
+        setAuthToken(null);
         return;
       }
       if (res.ok) {
@@ -553,14 +548,6 @@ export default function App() {
         <header className="w-full pt-4 pb-0 flex flex-col gap-2 select-none relative">
           {/* Controls in top right corner: Lock and Dark/Light Mode */}
           <div className="absolute top-3 right-0 sm:top-4 flex items-center gap-2 z-20">
-            <button
-              onClick={handleLock}
-              className="p-2 sm:p-2.5 rounded-2xl bg-stone-200/50 hover:bg-stone-200/80 dark:bg-[#141A16] dark:hover:bg-[#1c241f] border border-transparent text-stone-600 dark:text-stone-300 transition-all duration-300 flex items-center justify-center cursor-pointer"
-              title="Aizslēgt žurnālu"
-              aria-label="Aizslēgt žurnālu"
-            >
-              <Lock className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
             <button
               onClick={() => setDarkMode(!darkMode)}
               id="btn_toggle_theme"
