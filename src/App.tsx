@@ -453,8 +453,9 @@ export default function App() {
     return `${dateStr.charAt(0).toUpperCase()}${dateStr.slice(1)} • ${timeStr}`;
   }, [currentTime]);
 
-  const fetchCalendar = async () => {
-    if (!authToken) return;
+  const fetchCalendar = async (token?: string) => {
+    const activeToken = token ?? authToken;
+    if (!activeToken) return;
     setLoadingCalendar(true);
     const fallbackEvents: CalendarEventType[] = [
       {
@@ -466,7 +467,7 @@ export default function App() {
     try {
       const res = await fetch("/api/calendar", {
         headers: {
-          "Authorization": `Bearer ${authToken}`
+          "Authorization": `Bearer ${activeToken}`
         }
       });
       if (res.status === 401) {
@@ -512,7 +513,7 @@ export default function App() {
 
   useEffect(() => {
     if (authToken) {
-      fetchCalendar();
+      fetchCalendar(authToken);
     }
   }, [authToken]);
 
