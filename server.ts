@@ -2,11 +2,15 @@ import express, { Request, Response, NextFunction } from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
+import crypto from "crypto";
 
 dotenv.config();
 
 const app = express();
 const PORT = 3000;
+
+const JOURNAL_PIN = process.env.JOURNAL_PIN || "7742";
+const AUTH_SECRET = process.env.AUTH_SECRET || "gi_journal_super_secret_signing_key_2025_etg";
 
 // ---------------------------------------------------------------------------
 // Rate Limiter — in-memory sliding window per IP
@@ -30,12 +34,18 @@ function createRateLimiter(maxRequests: number, windowMs: number) {
       (req.headers["x-forwarded-for"] as string)?.split(",")[0].trim() ||
       req.socket.remoteAddress ||
       "unknown";
+
+    // In local development or for localhost, do not lock out the local developer
+    if (ip === "::1" || ip === "127.0.0.1" || ip.includes("127.0.0.1") || ip === "::ffff:127.0.0.1" || process.env.NODE_ENV !== "production") {
+      return next();
+    }
+
     const now = Date.now();
     const timestamps = (store.get(ip) || []).filter(t => now - t < windowMs);
 
     if (timestamps.length >= maxRequests) {
       res.setHeader("Retry-After", String(Math.ceil(windowMs / 1000)));
-      res.status(429).json({ error: "Pārāk daudz pieprasījumu. Mēģini vēlāk." });
+      res.status(429).json({ error: "Pārāk daudz mēģinājumu. Lūdzu, uzgaidiet brīdi." });
       return;
     }
 
@@ -46,6 +56,52 @@ function createRateLimiter(maxRequests: number, windowMs: number) {
 }
 
 const calendarLimiter = createRateLimiter(30, 60 * 1000);
+const authLimiter = createRateLimiter(5, 15 * 60 * 1000);
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Auth Token Helpers
+// ---------------------------------------------------------------------------
+function generateAuthToken(): string {
+  const expiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days
+  const payload = `valid:${expiresAt}`;
+  const hmac = crypto.createHmac("sha256", AUTH_SECRET).update(payload).digest("hex");
+  return `${Buffer.from(payload).toString("base64url")}.${hmac}`;
+}
+
+function verifyAuthToken(token: string): boolean {
+  try {
+    if (!token || typeof token !== "string") return false;
+    const parts = token.split(".");
+    if (parts.length !== 2) return false;
+    const payload = Buffer.from(parts[0], "base64url").toString("utf-8");
+    const expectedHmac = crypto.createHmac("sha256", AUTH_SECRET).update(payload).digest("hex");
+    
+    if (!crypto.timingSafeEqual(Buffer.from(parts[1]), Buffer.from(expectedHmac))) {
+      return false;
+    }
+    
+    const [status, expiresStr] = payload.split(":");
+    if (status !== "valid") return false;
+    const expiresAt = Number(expiresStr);
+    if (isNaN(expiresAt) || Date.now() > expiresAt) return false;
+    
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function requireAuth(req: Request, res: Response, next: NextFunction) {
+  const authHeader = req.headers.authorization || (req.headers["x-journal-auth"] as string) || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
+  
+  if (verifyAuthToken(token)) {
+    return next();
+  }
+  
+  return res.status(401).json({ error: "Neautorizēta piekļuve. Lūdzu, ievadiet PIN kodu." });
+}
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
@@ -82,8 +138,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   ) {
     if (origin) {
       res.setHeader("Access-Control-Allow-Origin", origin);
-      res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+      res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-journal-auth");
     }
     if (req.method === "OPTIONS") {
       return res.sendStatus(204);
@@ -97,6 +153,36 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 app.use(express.json({ limit: "50kb" }));
 app.use(express.urlencoded({ extended: false, limit: "50kb" }));
+
+// ---------------------------------------------------------------------------
+// Auth Endpoints
+// ---------------------------------------------------------------------------
+app.post("/api/auth/verify", authLimiter, (req: Request, res: Response) => {
+  const { pin } = req.body || {};
+  const cleanPin = String(pin || "").trim();
+  const targetPin = String(JOURNAL_PIN || "7742").trim();
+
+  if (!cleanPin) {
+    return res.status(400).json({ error: "PIN kods ir obligāts." });
+  }
+
+  const expectedBuffer = Buffer.from(targetPin);
+  const inputBuffer = Buffer.from(cleanPin);
+
+  if (expectedBuffer.length === inputBuffer.length && crypto.timingSafeEqual(expectedBuffer, inputBuffer)) {
+    const token = generateAuthToken();
+    return res.json({ success: true, token });
+  }
+
+  return res.status(401).json({ error: "Nepareizs PIN kods." });
+});
+
+app.get("/api/auth/check", (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization || (req.headers["x-journal-auth"] as string) || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
+  res.json({ authenticated: verifyAuthToken(token) });
+});
+// ---------------------------------------------------------------------------
 
 function isFutureEvent(dateStr: string) {
   if (dateStr === "Nezināms") return false;
@@ -204,7 +290,7 @@ function parseICS(icsString: string) {
   return events;
 }
 
-app.get("/api/calendar", calendarLimiter, async (req, res) => {
+app.get("/api/calendar", requireAuth, calendarLimiter, async (req, res) => {
   res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   const calendarId = process.env.GOOGLE_CALENDAR_ID;
   const apiKey = process.env.GOOGLE_API_KEY;

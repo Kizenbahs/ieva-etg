@@ -16,55 +16,60 @@ import {
   Delete
 } from "lucide-react";
 
-// Cryptographic SHA-256 hash of PIN 7742
-const PIN_HASH = "fa2be76c702f76cf8c70999d8c5fcc8b3aab2d81f2d9417b5379ba5bf3a18c86";
-
-async function verifyPin(input: string): Promise<boolean> {
-  const customPin = (import.meta as any).env?.VITE_APP_PIN;
-  if (customPin) {
-    return input === customPin;
-  }
-  try {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(input);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-    return hashHex === PIN_HASH;
-  } catch {
-    return input === "7742";
-  }
-}
-
 interface PinLockScreenProps {
-  onUnlock: () => void;
+  onUnlock: (token: string) => void;
   darkMode: boolean;
   setDarkMode: (val: boolean) => void;
 }
 
 const PinLockScreen: React.FC<PinLockScreenProps> = ({ onUnlock, darkMode, setDarkMode }) => {
   const [pin, setPin] = useState("");
-  const [error, setError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [loading, setLoading] = useState(false);
   const [shake, setShake] = useState(false);
 
   const checkPin = async (candidate: string) => {
-    const isValid = await verifyPin(candidate);
-    if (isValid) {
-      localStorage.setItem("gi_journal_unlocked", "true");
-      onUnlock();
-    } else {
-      setError(true);
+    setLoading(true);
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/auth/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: candidate })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.token) {
+          localStorage.setItem("gi_journal_token", data.token);
+          onUnlock(data.token);
+          return;
+        }
+      }
+
+      const errData = await res.json().catch(() => ({}));
+      setErrorMsg(errData.error || "Nepareizs PIN kods. Mēģiniet vēlreiz.");
       setShake(true);
       setTimeout(() => {
         setShake(false);
         setPin("");
       }, 500);
+    } catch {
+      setErrorMsg("Savienojuma kļūda. Mēģiniet vēlreiz.");
+      setShake(true);
+      setTimeout(() => {
+        setShake(false);
+        setPin("");
+      }, 500);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDigit = (digit: string) => {
+    if (loading) return;
     if (pin.length < 4) {
-      setError(false);
+      setErrorMsg("");
       const nextPin = pin + digit;
       setPin(nextPin);
       if (nextPin.length === 4) {
@@ -74,17 +79,20 @@ const PinLockScreen: React.FC<PinLockScreenProps> = ({ onUnlock, darkMode, setDa
   };
 
   const handleBackspace = () => {
-    setError(false);
+    if (loading) return;
+    setErrorMsg("");
     setPin((prev) => prev.slice(0, -1));
   };
 
   const handleClear = () => {
-    setError(false);
+    if (loading) return;
+    setErrorMsg("");
     setPin("");
   };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (loading) return;
       if (e.key >= "0" && e.key <= "9") {
         handleDigit(e.key);
       } else if (e.key === "Backspace") {
@@ -95,7 +103,7 @@ const PinLockScreen: React.FC<PinLockScreenProps> = ({ onUnlock, darkMode, setDa
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [pin]);
+  }, [pin, loading]);
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#F4F0E6] text-stone-900 dark:bg-[#0E120F] dark:text-stone-100 p-4 transition-colors duration-500 relative overflow-hidden select-none">
@@ -144,14 +152,14 @@ const PinLockScreen: React.FC<PinLockScreenProps> = ({ onUnlock, darkMode, setDa
                 animate={{
                   scale: isFilled ? 1.15 : 1,
                   backgroundColor: isFilled
-                    ? error
+                    ? errorMsg
                       ? "#EF4444"
                       : "#467C32"
                     : "transparent",
                 }}
                 transition={{ duration: 0.15 }}
                 className={`w-4 h-4 rounded-full border-2 transition-colors duration-200 ${
-                  error
+                  errorMsg
                     ? "border-red-500"
                     : isFilled
                     ? "border-[#467C32] dark:border-[#88D462] dark:bg-[#88D462]"
@@ -164,13 +172,13 @@ const PinLockScreen: React.FC<PinLockScreenProps> = ({ onUnlock, darkMode, setDa
 
         {/* Error message */}
         <div className="h-6 mb-4 flex items-center justify-center">
-          {error && (
+          {errorMsg && (
             <motion.span
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-xs font-medium text-red-500"
             >
-              Nepareizs PIN kods. Mēģiniet vēlreiz.
+              {errorMsg}
             </motion.span>
           )}
         </div>
@@ -409,11 +417,11 @@ const renderFormattedText = (text: string) => {
 };
 
 export default function App() {
-  const [isUnlocked, setIsUnlocked] = useState<boolean>(() => {
+  const [authToken, setAuthToken] = useState<string | null>(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("gi_journal_unlocked") === "true";
+      return localStorage.getItem("gi_journal_token");
     }
-    return false;
+    return null;
   });
 
   const [darkMode, setDarkMode] = useState<boolean>(() => {
@@ -434,8 +442,8 @@ export default function App() {
   const [likedPosts, setLikedPosts] = useState<Record<number, boolean>>({});
 
   const handleLock = () => {
-    localStorage.removeItem("gi_journal_unlocked");
-    setIsUnlocked(false);
+    localStorage.removeItem("gi_journal_token");
+    setAuthToken(null);
   };
 
   const formattedDate = useMemo(() => {
@@ -456,6 +464,7 @@ export default function App() {
   }, [currentTime]);
 
   const fetchCalendar = async () => {
+    if (!authToken) return;
     setLoadingCalendar(true);
     const fallbackEvents: CalendarEventType[] = [
       {
@@ -465,7 +474,15 @@ export default function App() {
       }
     ];
     try {
-      const res = await fetch("/api/calendar");
+      const res = await fetch("/api/calendar", {
+        headers: {
+          "Authorization": `Bearer ${authToken}`
+        }
+      });
+      if (res.status === 401) {
+        handleLock();
+        return;
+      }
       if (res.ok) {
         const contentType = res.headers.get("content-type");
         if (contentType && contentType.includes("application/json")) {
@@ -504,10 +521,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (isUnlocked) {
+    if (authToken) {
       fetchCalendar();
     }
-  }, [isUnlocked]);
+  }, [authToken]);
 
   const diffMs = currentTime.getTime() - START_DATE.getTime();
   const totalDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
@@ -520,10 +537,10 @@ export default function App() {
   // Lead story is the first item when available (shown on desktop)
   const featuredEvent = calendarEvents.length > 0 ? calendarEvents[0] : null;
 
-  if (!isUnlocked) {
+  if (!authToken) {
     return (
       <PinLockScreen
-        onUnlock={() => setIsUnlocked(true)}
+        onUnlock={(token) => setAuthToken(token)}
         darkMode={darkMode}
         setDarkMode={setDarkMode}
       />
