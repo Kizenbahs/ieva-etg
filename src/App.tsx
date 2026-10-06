@@ -10,8 +10,7 @@ import {
   Clock, 
   X, 
   Sparkles, 
-  ArrowUpRight,
-  Delete
+  ArrowUpRight
 } from "lucide-react";
 
 interface PinLockScreenProps {
@@ -119,90 +118,118 @@ const PinLockScreen: React.FC<PinLockScreenProps> = ({ onUnlock, darkMode, setDa
         {darkMode ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-stone-600" />}
       </button>
 
-      {/* Lock Box */}
+      {/* Lock Box with Running Tail Border */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
-        className={`w-full max-w-sm rounded-3xl p-8 bg-[#FAF7F0] dark:bg-[#141A16] border border-[#E2DDD0] dark:border-[#233227] shadow-xl flex flex-col items-center text-center relative z-10 ${
+        className={`w-full max-w-[290px] sm:max-w-sm relative p-[2px] rounded-3xl overflow-hidden shadow-2xl z-10 bg-[#E2DDD0] dark:bg-[#233227] ${
           shake ? "animate-bounce" : ""
         }`}
       >
-        <h1 className="font-handwritten text-4xl font-semibold mb-1">
-          <span className="text-[#467C32] dark:text-[#88D462]">GI</span> žurnāls
-        </h1>
+        {/* Animated Running Tail Border */}
+        <div className="absolute inset-[-150%] animate-border-spin bg-[conic-gradient(from_0deg_at_50%_50%,transparent_0deg,transparent_250deg,rgba(70,124,50,0.2)_280deg,#467C32_320deg,#88D462_350deg,#dcfce7_360deg)] dark:bg-[conic-gradient(from_0deg_at_50%_50%,transparent_0deg,transparent_240deg,rgba(136,212,98,0.25)_275deg,#467C32_315deg,#88D462_350deg,#ffffff_360deg)] pointer-events-none" />
 
-        {/* PIN Bubble Indicators */}
-        <div className="flex items-center justify-center gap-4 mb-8">
-          {[0, 1, 2, 3].map((index) => {
-            const isFilled = pin.length > index;
-            return (
-              <motion.div
-                key={index}
-                animate={{
-                  scale: isFilled ? 1.15 : 1,
-                  backgroundColor: isFilled
-                    ? errorMsg
-                      ? "#EF4444"
-                      : "#467C32"
-                    : "transparent",
-                }}
-                transition={{ duration: 0.15 }}
-                className={`w-4 h-4 rounded-full border-2 transition-colors duration-200 ${
-                  errorMsg
-                    ? "border-red-500"
-                    : isFilled
-                    ? "border-[#467C32] dark:border-[#88D462] dark:bg-[#88D462]"
-                    : "border-stone-400 dark:border-stone-600"
-                }`}
-              />
-            );
-          })}
-        </div>
+        {/* Inner Card Container */}
+        <div className="relative w-full h-full rounded-[calc(1.5rem-2px)] p-5 sm:p-7 bg-[#FAF7F0] dark:bg-[#141A16] flex flex-col items-center text-center">
+          {/* PIN Bubble Indicators */}
+          <div className="flex items-center justify-center gap-3.5 sm:gap-4 mb-3 sm:mb-4">
+            {[0, 1, 2, 3].map((index) => {
+              const isFilled = pin.length > index;
+              return (
+                <motion.div
+                  key={index}
+                  animate={{
+                    scale: isFilled ? 1.15 : 1,
+                    backgroundColor: isFilled
+                      ? errorMsg
+                        ? "#EF4444"
+                        : "#467C32"
+                      : "transparent",
+                  }}
+                  transition={{ duration: 0.15 }}
+                  className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border-2 transition-colors duration-200 ${
+                    errorMsg
+                      ? "border-red-500"
+                      : isFilled
+                      ? "border-[#467C32] dark:border-[#88D462] dark:bg-[#88D462]"
+                      : "border-stone-400 dark:border-stone-600"
+                  }`}
+                />
+              );
+            })}
+          </div>
 
-        {/* Error message */}
-        <div className="h-6 mb-4 flex items-center justify-center">
-          {errorMsg && (
-            <motion.span
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-xs font-medium text-red-500"
-            >
-              {errorMsg}
-            </motion.span>
-          )}
-        </div>
+          {/* Error message */}
+          <div className="h-5 mb-2 sm:mb-3 flex items-center justify-center">
+            {errorMsg && (
+              <motion.span
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-xs font-medium text-red-500"
+              >
+                {errorMsg}
+              </motion.span>
+            )}
+          </div>
 
-        {/* Keypad Grid */}
-        <div className="grid grid-cols-3 gap-3 w-full max-w-[260px]">
-          {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((num) => (
+          {/* Keypad Grid */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-2.5 w-full max-w-[240px] sm:max-w-[260px]">
+            {[
+              { num: "1", sub: "ETG" },
+              { num: "2", sub: "ABC" },
+              { num: "3", sub: "DEF" },
+              { num: "4", sub: "GHI" },
+              { num: "5", sub: "JKL" },
+              { num: "6", sub: "MNO" },
+              { num: "7", sub: "PQRS" },
+              { num: "8", sub: "TUV" },
+              { num: "9", sub: "WXYZ" },
+            ].map(({ num, sub }) => (
+              <button
+                key={num}
+                onClick={() => handleDigit(num)}
+                className="w-full aspect-square rounded-2xl bg-stone-200/50 hover:bg-stone-200 dark:bg-stone-800/40 dark:hover:bg-stone-800 text-stone-800 dark:text-stone-100 transition-all duration-150 active:scale-95 flex flex-col items-center justify-center cursor-pointer border border-[#DCD5C5]/40 dark:border-[#233227]"
+              >
+                <span className="text-base sm:text-lg font-mono font-semibold leading-none">{num}</span>
+                {sub ? (
+                  <span className="text-[8px] sm:text-[9px] font-sans font-semibold tracking-wider text-stone-500 dark:text-stone-400 mt-0.5 leading-none">
+                    {sub}
+                  </span>
+                ) : (
+                  <span className="h-[8px] sm:h-[9px] mt-0.5" />
+                )}
+              </button>
+            ))}
             <button
-              key={num}
-              onClick={() => handleDigit(num)}
-              className="w-full aspect-square rounded-2xl bg-stone-200/50 hover:bg-stone-200 dark:bg-stone-800/40 dark:hover:bg-stone-800 text-lg font-mono font-medium text-stone-800 dark:text-stone-100 transition-all duration-150 active:scale-95 flex items-center justify-center cursor-pointer border border-[#DCD5C5]/40 dark:border-[#233227]"
+              onClick={handleClear}
+              className="w-full aspect-square rounded-2xl bg-stone-200/50 hover:bg-stone-200 dark:bg-stone-800/40 dark:hover:bg-stone-800 text-stone-800 dark:text-stone-100 transition-all duration-150 active:scale-95 flex flex-col items-center justify-center cursor-pointer border border-[#DCD5C5]/40 dark:border-[#233227]"
             >
-              {num}
+              <span className="text-base sm:text-lg font-mono font-semibold leading-none">C</span>
+              <span className="text-[7px] sm:text-[8px] font-sans font-semibold tracking-tight text-stone-500 dark:text-stone-400 mt-0.5 leading-none whitespace-nowrap">
+                DZĒST VISU
+              </span>
             </button>
-          ))}
-          <button
-            onClick={handleClear}
-            className="w-full aspect-square rounded-2xl bg-transparent hover:bg-stone-200/50 dark:hover:bg-stone-800/40 text-xs font-mono text-stone-500 dark:text-stone-400 transition-all duration-150 active:scale-95 flex items-center justify-center cursor-pointer"
-          >
-            C
-          </button>
-          <button
-            onClick={() => handleDigit("0")}
-            className="w-full aspect-square rounded-2xl bg-stone-200/50 hover:bg-stone-200 dark:bg-stone-800/40 dark:hover:bg-stone-800 text-lg font-mono font-medium text-stone-800 dark:text-stone-100 transition-all duration-150 active:scale-95 flex items-center justify-center cursor-pointer border border-[#DCD5C5]/40 dark:border-[#233227]"
-          >
-            0
-          </button>
-          <button
-            onClick={handleBackspace}
-            aria-label="Dzēst"
-            className="w-full aspect-square rounded-2xl bg-transparent hover:bg-stone-200/50 dark:hover:bg-stone-800/40 text-stone-500 dark:text-stone-400 transition-all duration-150 active:scale-95 flex items-center justify-center cursor-pointer"
-          >
-            <Delete className="w-5 h-5" />
-          </button>
+            <button
+              onClick={() => handleDigit("0")}
+              className="w-full aspect-square rounded-2xl bg-stone-200/50 hover:bg-stone-200 dark:bg-stone-800/40 dark:hover:bg-stone-800 text-stone-800 dark:text-stone-100 transition-all duration-150 active:scale-95 flex flex-col items-center justify-center cursor-pointer border border-[#DCD5C5]/40 dark:border-[#233227]"
+            >
+              <span className="text-base sm:text-lg font-mono font-semibold leading-none">0</span>
+              <span className="text-[8px] sm:text-[9px] font-sans font-semibold tracking-wider text-stone-500 dark:text-stone-400 mt-0.5 leading-none">
+                +
+              </span>
+            </button>
+            <button
+              onClick={handleBackspace}
+              aria-label="Dzēst vienu"
+              className="w-full aspect-square rounded-2xl bg-stone-200/50 hover:bg-stone-200 dark:bg-stone-800/40 dark:hover:bg-stone-800 text-stone-800 dark:text-stone-100 transition-all duration-150 active:scale-95 flex flex-col items-center justify-center cursor-pointer border border-[#DCD5C5]/40 dark:border-[#233227]"
+            >
+              <span className="text-base sm:text-lg font-mono font-semibold leading-none">X</span>
+              <span className="text-[7px] sm:text-[8px] font-sans font-semibold tracking-tight text-stone-500 dark:text-stone-400 mt-0.5 leading-none whitespace-nowrap">
+                DZĒST VIENU
+              </span>
+            </button>
+          </div>
         </div>
       </motion.div>
     </div>
