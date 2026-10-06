@@ -11,7 +11,6 @@ import {
   X, 
   Sparkles, 
   ArrowUpRight,
-  Lock,
   Unlock,
   Delete
 } from "lucide-react";
@@ -41,7 +40,6 @@ const PinLockScreen: React.FC<PinLockScreenProps> = ({ onUnlock, darkMode, setDa
       if (res.ok) {
         const data = await res.json();
         if (data.token) {
-          localStorage.setItem("gi_journal_token", data.token);
           onUnlock(data.token);
           return;
         }
@@ -131,16 +129,9 @@ const PinLockScreen: React.FC<PinLockScreenProps> = ({ onUnlock, darkMode, setDa
           shake ? "animate-bounce" : ""
         }`}
       >
-        <div className="w-14 h-14 rounded-2xl bg-[#467C32]/10 dark:bg-[#88D462]/10 border border-[#467C32]/20 dark:border-[#88D462]/20 flex items-center justify-center mb-4 text-[#467C32] dark:text-[#88D462]">
-          <Lock className="w-7 h-7" />
-        </div>
-
         <h1 className="font-handwritten text-4xl font-semibold mb-1">
           <span className="text-[#467C32] dark:text-[#88D462]">GI</span> žurnāls
         </h1>
-        <p className="text-xs font-mono text-stone-500 dark:text-stone-400 mb-6">
-          Ievadiet 4 ciparu PIN kodu
-        </p>
 
         {/* PIN Bubble Indicators */}
         <div className="flex items-center justify-center gap-4 mb-8">
@@ -417,12 +408,12 @@ const renderFormattedText = (text: string) => {
 };
 
 export default function App() {
-  const [authToken, setAuthToken] = useState<string | null>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("gi_journal_token");
-    }
-    return null;
-  });
+  const [authToken, setAuthToken] = useState<string | null>(null);
+
+  // One-time cleanup: remove any token previously stored in localStorage
+  useEffect(() => {
+    localStorage.removeItem("gi_journal_token");
+  }, []);
 
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     if (typeof window !== "undefined") {
@@ -442,7 +433,6 @@ export default function App() {
   const [likedPosts, setLikedPosts] = useState<Record<number, boolean>>({});
 
   const handleLock = () => {
-    localStorage.removeItem("gi_journal_token");
     setAuthToken(null);
   };
 

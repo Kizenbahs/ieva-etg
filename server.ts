@@ -9,8 +9,8 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
-const JOURNAL_PIN = process.env.JOURNAL_PIN || "7742";
-const AUTH_SECRET = process.env.AUTH_SECRET || "gi_journal_super_secret_signing_key_2025_etg";
+const JOURNAL_PIN = process.env.JOURNAL_PIN || "";
+const AUTH_SECRET = process.env.AUTH_SECRET || "";
 
 // ---------------------------------------------------------------------------
 // Rate Limiter — in-memory sliding window per IP
@@ -158,15 +158,18 @@ app.use(express.urlencoded({ extended: false, limit: "50kb" }));
 // Auth Endpoints
 // ---------------------------------------------------------------------------
 app.post("/api/auth/verify", authLimiter, (req: Request, res: Response) => {
+  if (!JOURNAL_PIN || !AUTH_SECRET) {
+    return res.status(503).json({ error: "Autentifikācija nav konfigurēta." });
+  }
+
   const { pin } = req.body || {};
   const cleanPin = String(pin || "").trim();
-  const targetPin = String(JOURNAL_PIN || "7742").trim();
 
   if (!cleanPin) {
     return res.status(400).json({ error: "PIN kods ir obligāts." });
   }
 
-  const expectedBuffer = Buffer.from(targetPin);
+  const expectedBuffer = Buffer.from(JOURNAL_PIN);
   const inputBuffer = Buffer.from(cleanPin);
 
   if (expectedBuffer.length === inputBuffer.length && crypto.timingSafeEqual(expectedBuffer, inputBuffer)) {
