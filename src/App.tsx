@@ -1,17 +1,215 @@
-import React, { useState, useEffect, ReactNode, useMemo, MouseEvent } from "react";
+import React, { useState, useEffect, ReactNode, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Sun, 
   Moon, 
-  RefreshCw,
-  Heart,
-  BookOpen,
-  Calendar,
-  Clock,
-  X,
-  Sparkles,
-  ArrowUpRight
+  RefreshCw, 
+  Heart, 
+  BookOpen, 
+  Calendar, 
+  Clock, 
+  X, 
+  Sparkles, 
+  ArrowUpRight,
+  Lock,
+  Unlock,
+  Delete
 } from "lucide-react";
+
+// Cryptographic SHA-256 hash of PIN 7742
+const PIN_HASH = "fa2be76c702f76cf8c70999d8c5fcc8b3aab2d81f2d9417b5379ba5bf3a18c86";
+
+async function verifyPin(input: string): Promise<boolean> {
+  const customPin = (import.meta as any).env?.VITE_APP_PIN;
+  if (customPin) {
+    return input === customPin;
+  }
+  try {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(input);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+    return hashHex === PIN_HASH;
+  } catch {
+    return input === "7742";
+  }
+}
+
+interface PinLockScreenProps {
+  onUnlock: () => void;
+  darkMode: boolean;
+  setDarkMode: (val: boolean) => void;
+}
+
+const PinLockScreen: React.FC<PinLockScreenProps> = ({ onUnlock, darkMode, setDarkMode }) => {
+  const [pin, setPin] = useState("");
+  const [error, setError] = useState(false);
+  const [shake, setShake] = useState(false);
+
+  const checkPin = async (candidate: string) => {
+    const isValid = await verifyPin(candidate);
+    if (isValid) {
+      localStorage.setItem("gi_journal_unlocked", "true");
+      onUnlock();
+    } else {
+      setError(true);
+      setShake(true);
+      setTimeout(() => {
+        setShake(false);
+        setPin("");
+      }, 500);
+    }
+  };
+
+  const handleDigit = (digit: string) => {
+    if (pin.length < 4) {
+      setError(false);
+      const nextPin = pin + digit;
+      setPin(nextPin);
+      if (nextPin.length === 4) {
+        checkPin(nextPin);
+      }
+    }
+  };
+
+  const handleBackspace = () => {
+    setError(false);
+    setPin((prev) => prev.slice(0, -1));
+  };
+
+  const handleClear = () => {
+    setError(false);
+    setPin("");
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key >= "0" && e.key <= "9") {
+        handleDigit(e.key);
+      } else if (e.key === "Backspace") {
+        handleBackspace();
+      } else if (e.key === "Escape") {
+        handleClear();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [pin]);
+
+  return (
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#F4F0E6] text-stone-900 dark:bg-[#0E120F] dark:text-stone-100 p-4 transition-colors duration-500 relative overflow-hidden select-none">
+      {/* Ambient glow in dark mode */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden hidden dark:block">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[#1c3a1b] filter blur-[120px] opacity-40" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-[#0e2c1e] filter blur-[120px] opacity-35" />
+      </div>
+
+      {/* Theme Toggle Top Right */}
+      <button
+        onClick={() => setDarkMode(!darkMode)}
+        className="absolute top-4 right-4 p-2.5 rounded-2xl bg-stone-200/60 hover:bg-stone-200/90 dark:bg-[#141A16] dark:hover:bg-[#1c241f] border border-[#DCD5C5]/60 dark:border-[#233227] text-stone-600 dark:text-stone-300 transition-all cursor-pointer z-10"
+        aria-label="Pārslēgt tumšo režīmu"
+      >
+        {darkMode ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-stone-600" />}
+      </button>
+
+      {/* Lock Box */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className={`w-full max-w-sm rounded-3xl p-8 bg-[#FAF7F0] dark:bg-[#141A16] border border-[#E2DDD0] dark:border-[#233227] shadow-xl flex flex-col items-center text-center relative z-10 ${
+          shake ? "animate-bounce" : ""
+        }`}
+      >
+        <div className="w-14 h-14 rounded-2xl bg-[#467C32]/10 dark:bg-[#88D462]/10 border border-[#467C32]/20 dark:border-[#88D462]/20 flex items-center justify-center mb-4 text-[#467C32] dark:text-[#88D462]">
+          <Lock className="w-7 h-7" />
+        </div>
+
+        <h1 className="font-handwritten text-4xl font-semibold mb-1">
+          <span className="text-[#467C32] dark:text-[#88D462]">GI</span> žurnāls
+        </h1>
+        <p className="text-xs font-mono text-stone-500 dark:text-stone-400 mb-6">
+          Ievadiet 4 ciparu PIN kodu
+        </p>
+
+        {/* PIN Bubble Indicators */}
+        <div className="flex items-center justify-center gap-4 mb-8">
+          {[0, 1, 2, 3].map((index) => {
+            const isFilled = pin.length > index;
+            return (
+              <motion.div
+                key={index}
+                animate={{
+                  scale: isFilled ? 1.15 : 1,
+                  backgroundColor: isFilled
+                    ? error
+                      ? "#EF4444"
+                      : "#467C32"
+                    : "transparent",
+                }}
+                transition={{ duration: 0.15 }}
+                className={`w-4 h-4 rounded-full border-2 transition-colors duration-200 ${
+                  error
+                    ? "border-red-500"
+                    : isFilled
+                    ? "border-[#467C32] dark:border-[#88D462] dark:bg-[#88D462]"
+                    : "border-stone-400 dark:border-stone-600"
+                }`}
+              />
+            );
+          })}
+        </div>
+
+        {/* Error message */}
+        <div className="h-6 mb-4 flex items-center justify-center">
+          {error && (
+            <motion.span
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-xs font-medium text-red-500"
+            >
+              Nepareizs PIN kods. Mēģiniet vēlreiz.
+            </motion.span>
+          )}
+        </div>
+
+        {/* Keypad Grid */}
+        <div className="grid grid-cols-3 gap-3 w-full max-w-[260px]">
+          {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((num) => (
+            <button
+              key={num}
+              onClick={() => handleDigit(num)}
+              className="w-full aspect-square rounded-2xl bg-stone-200/50 hover:bg-stone-200 dark:bg-stone-800/40 dark:hover:bg-stone-800 text-lg font-mono font-medium text-stone-800 dark:text-stone-100 transition-all duration-150 active:scale-95 flex items-center justify-center cursor-pointer border border-[#DCD5C5]/40 dark:border-[#233227]"
+            >
+              {num}
+            </button>
+          ))}
+          <button
+            onClick={handleClear}
+            className="w-full aspect-square rounded-2xl bg-transparent hover:bg-stone-200/50 dark:hover:bg-stone-800/40 text-xs font-mono text-stone-500 dark:text-stone-400 transition-all duration-150 active:scale-95 flex items-center justify-center cursor-pointer"
+          >
+            C
+          </button>
+          <button
+            onClick={() => handleDigit("0")}
+            className="w-full aspect-square rounded-2xl bg-stone-200/50 hover:bg-stone-200 dark:bg-stone-800/40 dark:hover:bg-stone-800 text-lg font-mono font-medium text-stone-800 dark:text-stone-100 transition-all duration-150 active:scale-95 flex items-center justify-center cursor-pointer border border-[#DCD5C5]/40 dark:border-[#233227]"
+          >
+            0
+          </button>
+          <button
+            onClick={handleBackspace}
+            aria-label="Dzēst"
+            className="w-full aspect-square rounded-2xl bg-transparent hover:bg-stone-200/50 dark:hover:bg-stone-800/40 text-stone-500 dark:text-stone-400 transition-all duration-150 active:scale-95 flex items-center justify-center cursor-pointer"
+          >
+            <Delete className="w-5 h-5" />
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 const START_DATE_STR = "2025-11-10T00:00:00";
 const START_DATE = new Date(START_DATE_STR);
@@ -23,7 +221,29 @@ interface CalendarEventType {
   imageUrl?: string;
 }
 
+const isSafeUrl = (url: string): boolean => {
+  if (!url) return false;
+  const trimmed = url.trim().toLowerCase();
+  if (
+    trimmed.startsWith('javascript:') ||
+    trimmed.startsWith('vbscript:') ||
+    trimmed.startsWith('data:') ||
+    trimmed.includes('\x00')
+  ) {
+    return false;
+  }
+  return (
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('mailto:') ||
+    trimmed.startsWith('tel:') ||
+    trimmed.startsWith('/') ||
+    trimmed.startsWith('#')
+  );
+};
+
 const isImageURL = (url: string): boolean => {
+  if (!isSafeUrl(url)) return false;
   const cleanUrl = url.toLowerCase().split('?')[0];
   const isDirectImage = cleanUrl.endsWith('.jpg') || 
                         cleanUrl.endsWith('.jpeg') || 
@@ -39,18 +259,17 @@ const isImageURL = (url: string): boolean => {
 };
 
 const getDirectImageURL = (url: string): string => {
+  if (!isSafeUrl(url)) return '';
   if (url.includes('drive.google.com/file/d/')) {
-    const match = url.match(/\/file\/d\/([^\/]+)/);
+    const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
     if (match && match[1]) {
-      const fileId = match[1].split('?')[0].split('/')[0];
-      return `https://lh3.googleusercontent.com/d/${fileId}`;
+      return `https://lh3.googleusercontent.com/d/${match[1]}`;
     }
   }
   if (url.includes('drive.google.com/open?id=')) {
-    const match = url.match(/[\?&]id=([^&]+)/);
+    const match = url.match(/[\?&]id=([a-zA-Z0-9_-]+)/);
     if (match && match[1]) {
-      const fileId = match[1].split('?')[0].split('/')[0];
-      return `https://lh3.googleusercontent.com/d/${fileId}`;
+      return `https://lh3.googleusercontent.com/d/${match[1]}`;
     }
   }
   return url;
@@ -79,11 +298,15 @@ const renderFormattedText = (text: string) => {
       return subParts.map((subPart, i) => {
         if (subPart.match(urlRegex)) {
           const url = subPart.startsWith('http') ? subPart : `https://${subPart}`;
+          if (!isSafeUrl(url)) return subPart;
+
           if (isImageURL(url)) {
+            const imgSrc = getDirectImageURL(url);
+            if (!imgSrc) return subPart;
             return (
               <img
                 key={i}
-                src={getDirectImageURL(url)}
+                src={imgSrc}
                 alt="Ieraksta attēls"
                 className="my-6 rounded-2xl w-full max-h-[420px] object-cover mx-auto shadow-lg block border border-black/10 dark:border-white/10 transition-transform duration-500 hover:scale-[1.01]"
               />
@@ -105,6 +328,10 @@ const renderFormattedText = (text: string) => {
       });
     };
 
+    const dangerousTags = new Set([
+      'script', 'style', 'iframe', 'object', 'embed', 'meta', 'link', 'svg', 'button', 'input', 'form', 'base', 'frame', 'frameset'
+    ]);
+
     const convertNode = (node: ChildNode, key: string): ReactNode => {
       if (node.nodeType === 3) {
         return linkify(node.textContent || '');
@@ -113,6 +340,12 @@ const renderFormattedText = (text: string) => {
       if (node.nodeType === 1) {
         const element = node as Element;
         const tagName = element.tagName.toLowerCase();
+
+        // Block all dangerous or executable tags
+        if (dangerousTags.has(tagName)) {
+          return null;
+        }
+
         const childNodes = Array.from(element.childNodes);
         const children = childNodes.map((child, i) => convertNode(child, `${key}-${i}`));
 
@@ -132,12 +365,15 @@ const renderFormattedText = (text: string) => {
           case 'br':
             return <br key={key} />;
           case 'a': {
-            const href = element.getAttribute('href') || '#';
-            if (isImageURL(href)) {
+            const rawHref = element.getAttribute('href') || '#';
+            const safeHref = isSafeUrl(rawHref) ? rawHref : '#';
+            if (isImageURL(safeHref)) {
+              const imgSrc = getDirectImageURL(safeHref);
+              if (!imgSrc) return null;
               return (
                 <img
                   key={key}
-                  src={getDirectImageURL(href)}
+                  src={imgSrc}
                   alt="Ieraksta attēls"
                   className="my-6 rounded-2xl w-full max-h-[420px] object-cover mx-auto shadow-lg block border border-black/10 dark:border-white/10 transition-transform duration-500 hover:scale-[1.01]"
                 />
@@ -146,7 +382,7 @@ const renderFormattedText = (text: string) => {
             return (
               <a
                 key={key}
-                href={href}
+                href={safeHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[#467C32] dark:text-[#88D462] font-medium hover:underline underline-offset-4 break-all inline-flex items-center gap-1"
@@ -173,6 +409,13 @@ const renderFormattedText = (text: string) => {
 };
 
 export default function App() {
+  const [isUnlocked, setIsUnlocked] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("gi_journal_unlocked") === "true";
+    }
+    return false;
+  });
+
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("theme");
@@ -189,6 +432,11 @@ export default function App() {
   // Magazine UI State
   const [selectedPost, setSelectedPost] = useState<CalendarEventType | null>(null);
   const [likedPosts, setLikedPosts] = useState<Record<number, boolean>>({});
+
+  const handleLock = () => {
+    localStorage.removeItem("gi_journal_unlocked");
+    setIsUnlocked(false);
+  };
 
   const formattedDate = useMemo(() => {
     const dateStr = new Intl.DateTimeFormat("lv-LV", {
@@ -256,8 +504,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    fetchCalendar();
-  }, []);
+    if (isUnlocked) {
+      fetchCalendar();
+    }
+  }, [isUnlocked]);
 
   const diffMs = currentTime.getTime() - START_DATE.getTime();
   const totalDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
@@ -269,6 +519,16 @@ export default function App() {
 
   // Lead story is the first item when available (shown on desktop)
   const featuredEvent = calendarEvents.length > 0 ? calendarEvents[0] : null;
+
+  if (!isUnlocked) {
+    return (
+      <PinLockScreen
+        onUnlock={() => setIsUnlocked(true)}
+        darkMode={darkMode}
+        setDarkMode={setDarkMode}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-[#F4F0E6] text-stone-900 dark:bg-[#0E120F] dark:text-stone-100 flex flex-col items-center selection:bg-lime-600 selection:text-white transition-colors duration-500 relative pb-24">
@@ -282,16 +542,26 @@ export default function App() {
         
         {/* Top Editorial Header */}
         <header className="w-full pt-4 pb-0 flex flex-col gap-2 select-none relative">
-          {/* Dark/Light Mode Toggle in top right corner */}
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            id="btn_toggle_theme"
-            className="absolute top-3 right-0 sm:top-4 p-2 sm:p-2.5 rounded-2xl bg-stone-200/50 hover:bg-stone-200/80 dark:bg-[#141A16] dark:hover:bg-[#1c241f] border border-transparent text-stone-600 dark:text-stone-300 transition-all duration-300 flex items-center justify-center cursor-pointer z-20"
-            title={darkMode ? 'Gaišais režīms' : 'Tumšais režīms'}
-            aria-label="Pārslēgt tumšo režīmu"
-          >
-            {darkMode ? <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-stone-600 dark:text-stone-300" />}
-          </button>
+          {/* Controls in top right corner: Lock and Dark/Light Mode */}
+          <div className="absolute top-3 right-0 sm:top-4 flex items-center gap-2 z-20">
+            <button
+              onClick={handleLock}
+              className="p-2 sm:p-2.5 rounded-2xl bg-stone-200/50 hover:bg-stone-200/80 dark:bg-[#141A16] dark:hover:bg-[#1c241f] border border-transparent text-stone-600 dark:text-stone-300 transition-all duration-300 flex items-center justify-center cursor-pointer"
+              title="Aizslēgt žurnālu"
+              aria-label="Aizslēgt žurnālu"
+            >
+              <Lock className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              id="btn_toggle_theme"
+              className="p-2 sm:p-2.5 rounded-2xl bg-stone-200/50 hover:bg-stone-200/80 dark:bg-[#141A16] dark:hover:bg-[#1c241f] border border-transparent text-stone-600 dark:text-stone-300 transition-all duration-300 flex items-center justify-center cursor-pointer"
+              title={darkMode ? 'Gaišais režīms' : 'Tumšais režīms'}
+              aria-label="Pārslēgt tumšo režīmu"
+            >
+              {darkMode ? <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-stone-600 dark:text-stone-300" />}
+            </button>
+          </div>
 
           {/* Centered Editorial Masthead */}
           <div className="flex flex-col items-center justify-center py-6 sm:py-8 text-center">

@@ -95,6 +95,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 // ---------------------------------------------------------------------------
 
+app.use(express.json({ limit: "50kb" }));
+app.use(express.urlencoded({ extended: false, limit: "50kb" }));
+
 function isFutureEvent(dateStr: string) {
   if (dateStr === "Nezināms") return false;
   const parts = dateStr.split(".");
@@ -206,9 +209,6 @@ app.get("/api/calendar", calendarLimiter, async (req, res) => {
   const calendarId = process.env.GOOGLE_CALENDAR_ID;
   const apiKey = process.env.GOOGLE_API_KEY;
 
-  console.log("[API] GOOGLE_CALENDAR_ID exists:", !!calendarId);
-  console.log("[API] GOOGLE_API_KEY exists:", !!apiKey);
-
   if (!calendarId) {
     const fallback = [
       {
@@ -222,8 +222,8 @@ app.get("/api/calendar", calendarLimiter, async (req, res) => {
 
   try {
     if (apiKey) {
-      const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?key=${apiKey}&singleEvents=true&supportsAttachments=true&t=${Date.now()}`;
-      const response = await fetch(url);
+      const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?key=${encodeURIComponent(apiKey)}&singleEvents=true&supportsAttachments=true&t=${Date.now()}`;
+      const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
       if (!response.ok) {
         throw new Error(`Google API returned status ${response.status}`);
       }
@@ -298,7 +298,7 @@ app.get("/api/calendar", calendarLimiter, async (req, res) => {
       return res.json(filteredEvents);
     } else {
       const url = `https://calendar.google.com/calendar/ical/${encodeURIComponent(calendarId)}/public/basic.ics?t=${Date.now()}`;
-      const response = await fetch(url);
+      const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
       if (!response.ok) {
         throw new Error(`iCal feed returned status ${response.status}`);
       }
