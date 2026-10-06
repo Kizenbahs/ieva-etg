@@ -60,25 +60,34 @@ app.use((_req: Request, res: Response, next: NextFunction) => {
   res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   res.setHeader(
     "Content-Security-Policy",
-    "default-src 'none'; frame-ancestors 'none'"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' ws: wss: https:;"
   );
-  res.setHeader("Strict-Transport-Security", "max-age=15552000; includeSubDomains");
   next();
 });
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
-// CORS — only allow requests from the configured origin
+// CORS — allow same-origin, localhost, and configured origin
 // ---------------------------------------------------------------------------
-const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "http://localhost:5173";
-
 app.use((req: Request, res: Response, next: NextFunction) => {
-  const origin = req.headers.origin || "";
-  // Allow same-origin requests (no Origin header) and the configured domain
-  if (!origin || origin === ALLOWED_ORIGIN) {
-    res.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
-    res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  const origin = req.headers.origin;
+  const configuredOrigin = process.env.ALLOWED_ORIGIN;
+  
+  if (
+    !origin || 
+    !configuredOrigin || 
+    origin === configuredOrigin || 
+    origin.includes("localhost") || 
+    origin.includes("127.0.0.1")
+  ) {
+    if (origin) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    }
+    if (req.method === "OPTIONS") {
+      return res.sendStatus(204);
+    }
     next();
   } else {
     res.status(403).json({ error: "Forbidden" });

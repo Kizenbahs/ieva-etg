@@ -6,7 +6,6 @@ import {
   RefreshCw,
   Heart,
   BookOpen,
-  Search,
   Calendar,
   Clock,
   X,
@@ -173,55 +172,6 @@ const renderFormattedText = (text: string) => {
   }
 };
 
-interface ArchiveSearchProps {
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  count: number;
-}
-
-const ArchiveSearch: React.FC<ArchiveSearchProps> = ({ searchQuery, setSearchQuery, count }) => {
-  return (
-    <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-0 sm:pb-4 sm:border-b border-[#E2DDD0] dark:border-[#233227]">
-      <div className="flex items-center justify-center sm:justify-start gap-3 w-full sm:w-auto">
-        {searchQuery ? (
-          <h3 className="font-serif text-2xl font-semibold text-stone-900 dark:text-stone-100">
-            Meklēšanas rezultāti
-          </h3>
-        ) : (
-          <h3 className="hidden sm:block font-serif text-2xl font-semibold text-stone-900 dark:text-stone-100">
-            Arhīvs
-          </h3>
-        )}
-        <span className="hidden sm:inline text-xs font-mono text-stone-500 dark:text-stone-400 bg-stone-200/50 dark:bg-[#141A16] px-2.5 py-1 rounded-full border border-[#DCD5C5]/60 dark:border-[#233227]/60">
-          {count} {count === 1 ? "ieraksts" : "ieraksti"}
-        </span>
-      </div>
-
-      <div className="relative hidden sm:block w-full sm:w-80 group">
-        <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-[#467C32] dark:group-focus-within:text-[#88D462] transition-colors" />
-        <input
-          type="text"
-          aria-label="Meklēt arhīvā"
-          placeholder="Meklēt arhīvā..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-10 py-2.5 text-sm rounded-2xl bg-stone-200/40 hover:bg-stone-200/60 focus:bg-white dark:bg-[#141A16] dark:hover:bg-[#18211b] dark:focus:bg-[#111612] border border-[#DCD5C5] dark:border-[#233227] focus:border-[#467C32] dark:focus:border-[#88D462] focus:ring-2 focus:ring-[#467C32]/10 dark:focus:ring-[#88D462]/10 focus:outline-none transition-all duration-300 text-stone-900 dark:text-stone-100 font-sans placeholder:text-stone-400 dark:placeholder:text-stone-500"
-        />
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery("")}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 transition-colors p-0.5 rounded-full hover:bg-stone-300/40 dark:hover:bg-stone-800 cursor-pointer"
-            aria-label="Notīrīt meklēšanu"
-            title="Notīrīt"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        )}
-      </div>
-    </div>
-  );
-};
-
 export default function App() {
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     if (typeof window !== "undefined") {
@@ -237,7 +187,6 @@ export default function App() {
   const [loadingCalendar, setLoadingCalendar] = useState<boolean>(true);
   
   // Magazine UI State
-  const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedPost, setSelectedPost] = useState<CalendarEventType | null>(null);
   const [likedPosts, setLikedPosts] = useState<Record<number, boolean>>({});
 
@@ -310,18 +259,6 @@ export default function App() {
     fetchCalendar();
   }, []);
 
-  // Filter events based on search query
-  const filteredEvents = useMemo(() => {
-    if (!searchQuery.trim()) return calendarEvents;
-    const query = searchQuery.toLowerCase();
-    return calendarEvents.filter(
-      (ev) =>
-        ev.title.toLowerCase().includes(query) ||
-        ev.description.toLowerCase().includes(query) ||
-        ev.date.toLowerCase().includes(query)
-    );
-  }, [calendarEvents, searchQuery]);
-
   const diffMs = currentTime.getTime() - START_DATE.getTime();
   const totalDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
 
@@ -330,8 +267,8 @@ export default function App() {
     setLikedPosts((prev) => ({ ...prev, [index]: !prev[index] }));
   };
 
-  // Lead story is the first item when available and no search is active (shown on desktop)
-  const featuredEvent = !searchQuery && filteredEvents.length > 0 ? filteredEvents[0] : null;
+  // Lead story is the first item when available (shown on desktop)
+  const featuredEvent = calendarEvents.length > 0 ? calendarEvents[0] : null;
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-[#F4F0E6] text-stone-900 dark:bg-[#0E120F] dark:text-stone-100 flex flex-col items-center selection:bg-lime-600 selection:text-white transition-colors duration-500 relative pb-24">
@@ -462,33 +399,18 @@ export default function App() {
 
               {/* ARTICLE GRID SECTION */}
               <section className="w-full flex flex-col gap-6">
-                <ArchiveSearch
-                  searchQuery={searchQuery}
-                  setSearchQuery={setSearchQuery}
-                  count={filteredEvents.length}
-                />
-
-                {filteredEvents.length === 0 ? (
+                {calendarEvents.length === 0 ? (
                   <div className="w-full min-h-[350px] rounded-3xl border border-[#E2DDD0] dark:border-stone-800 bg-white/60 dark:bg-[#141A16]/60 flex flex-col items-center justify-center p-12 text-center">
                     <BookOpen className="w-10 h-10 text-stone-400 mb-3 stroke-[1.5]" />
                     <h3 className="font-serif text-2xl text-stone-800 dark:text-stone-200">
                       Ieraksti nav atrasti
                     </h3>
-                    <p className="text-sm text-stone-500 mt-1 max-w-md">
-                      Mēģiniet izmantot citu meklēšanas frāzi vai notīrīt meklētāju.
-                    </p>
-                    <button
-                      onClick={() => setSearchQuery("")}
-                      className="mt-4 px-4 py-2 text-xs font-mono uppercase tracking-wider bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 rounded-full hover:opacity-90 transition-opacity cursor-pointer"
-                    >
-                      Notīrīt meklēšanu
-                    </button>
                   </div>
                 ) : (
                   <div className="w-full gap-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                  {filteredEvents.map((event, idx) => {
+                  {calendarEvents.map((event, idx) => {
                     const globalIndex = idx;
-                    const isFeaturedOnDesktop = !searchQuery && idx === 0;
+                    const isFeaturedOnDesktop = idx === 0;
                     return (
                       <motion.article
                         key={idx}
