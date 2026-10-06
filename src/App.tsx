@@ -11,6 +11,7 @@ import {
   X, 
   Sparkles, 
   ArrowUpRight,
+  Lock,
   Unlock,
   Delete
 } from "lucide-react";
